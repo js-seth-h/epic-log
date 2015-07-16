@@ -182,15 +182,52 @@ JavaScript calls the toString method automatically when a
     done()
 
  
+  it 'watch ', (done)->    
+    cnt = 0
+    conf = 
+      filepath: './test-conf.json'
+    epic.configure conf
+
+
+    epic.setWriter (lv, dt, scope, args)->
+      cnt++
+      if cnt is 1 
+        expect lv 
+          .toBe 'log '
+      else if cnt is 2
+        expect scope
+          .toBe 'spec:sub'
+        expect lv 
+          .toBe 'info'
+        expect args[0]
+          .toBe 'text'
+      else             
+        expect lv 
+          .toBe 'warn'
+
+        epic.watcher.close()
+        done()
+
+    spec = epic.create 'spec'
+    spec.log 'test'
+    sub = spec.create 'sub'
+    sub.info 'text'
+    sub = spec.create 'sub'
+    sub.warn 'crash?'
+ 
   it 'file log - long ', (done)->    
     cnt = 0
-    epic.configure 
+    conf = 
       file:
         prefix: 'log-'
       consoleFilter: 'long4'   
       writer:
         console: true  
         file: true
+
+    epic.configure conf
+    logConf = epic.create 'conf'
+    logConf.info 'json', JSON.stringify conf, null, 4
 
     for i in [0...10]
 

@@ -97,22 +97,40 @@ createEpic.configure = (conf)->
   emitter.removeAllListeners()
   filter.clear()
 
-  createEpic.conf = conf
+  if conf.filepath
+    # createEpic.conf = require conf.filepath   
+    fs = require 'fs'
+    createEpic.watcher = fs.watch conf.filepath, (evt, fn)-> 
+      fs.readFile conf.filepath, (err, data)->
+        createEpic.conf =  JSON.parse data
+        createEpic.build()
+      return
+    cfg = fs.readFileSync conf.filepath
+    createEpic.conf = JSON.parse cfg
+  else
+    createEpic.conf = conf
+  createEpic.build()
 
+
+createEpic.build = ()->
+  conf = createEpic.conf
   # Set Writer
   for own k, v of conf.writer
     if v is false
       continue
     if v is true and createEpic.writer[k]
       # console.log 'set writer', k
-      emitter.on 'write', createEpic.writer[k]
+      createEpic.setWriter createEpic.writer[k]
     else 
-      emitter.on 'write', v 
+      createEpic.setWriter v 
 
   #set scope filter
   conf.consoleFilter = conf.consoleFilter || '*'
   filter.build conf.consoleFilter
   createEpic.filter = filter
+
+createEpic.setWriter = (writer)->
+  emitter.on 'write', writer
 
 createEpic.write = (lv, scope, args)-> 
   # if filter.enabled scope

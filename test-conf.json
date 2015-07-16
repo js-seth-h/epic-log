@@ -1,0 +1,10 @@
+{
+  "file": {
+   "prefix": "log-"
+  },
+  "consoleFilter": "long4",
+  "writer": 
+  {
+    "console": true
+  }
+}
