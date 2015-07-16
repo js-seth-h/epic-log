@@ -18,6 +18,11 @@ _isObject = (obj)->
 
 emitter = new events.EventEmitter()
 
+fixStr = (str, emptyStr)->
+  t = str + emptyStr
+  return t[0...emptyStr.length]
+
+
 filter =
   cached_enabled: {}
   skips: []
@@ -76,63 +81,65 @@ filter =
     return filter.cached_enabled[name]
 
 
-createEpic = (scope)->
+EpicLog = (scope)->
   epic = 
-    err : (args...)-> createEpic.write 'err ', scope, args
-    warn: (args...)-> createEpic.write 'warn', scope, args
-    info: (args...)-> createEpic.write 'info', scope, args
-    verb: (args...)-> createEpic.write 'verb', scope, args
-    log : (args...)-> createEpic.write 'log ', scope, args 
-    create: (subScope)->
+    err : (args...)-> EpicLog.write 'err', scope, args
+    warn: (args...)-> EpicLog.write 'warn', scope, args
+    info: (args...)-> EpicLog.write 'info', scope, args
+    verb: (args...)-> EpicLog.write 'verb', scope, args
+    log : (args...)-> EpicLog.write 'log', scope, args 
+    indent: (subScope)->
       if scope is null
-        return createEpic subScope
-      return createEpic scope + ':' + subScope
+        return EpicLog subScope
+      return EpicLog scope + ':' + subScope
   return epic
 
-createEpic.create = (scope)->
-  createEpic scope
+EpicLog.fixStr = fixStr
 
-createEpic.configure = (conf)->
+EpicLog.create = (scope)->
+  EpicLog scope
+
+EpicLog.configure = (conf)->
   # Clear
   emitter.removeAllListeners()
   filter.clear()
 
   if conf.filepath
-    # createEpic.conf = require conf.filepath   
+    # EpicLog.conf = require conf.filepath   
     fs = require 'fs'
-    createEpic.watcher = fs.watch conf.filepath, (evt, fn)-> 
+    EpicLog.watcher = fs.watch conf.filepath, (evt, fn)-> 
       fs.readFile conf.filepath, (err, data)->
-        createEpic.conf =  JSON.parse data
-        createEpic.build()
+        EpicLog.conf =  JSON.parse data
+        EpicLog.build()
       return
     cfg = fs.readFileSync conf.filepath
-    createEpic.conf = JSON.parse cfg
+    EpicLog.conf = JSON.parse cfg
   else
-    createEpic.conf = conf
-  createEpic.build()
+    EpicLog.conf = conf
+  EpicLog.build()
 
 
-createEpic.build = ()->
-  conf = createEpic.conf
+EpicLog.build = ()->
+  conf = EpicLog.conf
   # Set Writer
   for own k, v of conf.writer
     if v is false
       continue
-    if v is true and createEpic.writer[k]
+    if v is true and EpicLog.writer[k]
       # console.log 'set writer', k
-      createEpic.setWriter createEpic.writer[k]
+      EpicLog.setWriter EpicLog.writer[k]
     else 
-      createEpic.setWriter v 
+      EpicLog.setWriter v 
 
   #set scope filter
   conf.consoleFilter = conf.consoleFilter || '*'
   filter.build conf.consoleFilter
-  createEpic.filter = filter
+  EpicLog.filter = filter
 
-createEpic.setWriter = (writer)->
+EpicLog.setWriter = (writer)->
   emitter.on 'write', writer
 
-createEpic.write = (lv, scope, args)-> 
+EpicLog.write = (lv, scope, args)-> 
   # if filter.enabled scope
   now = new Date()
   tzoffset = now.getTimezoneOffset() * 60000; #offset in milliseconds
@@ -173,6 +180,7 @@ createFileWriter = ()->
       else if fileYMD != yyyymmdd
         bufLine.unshift line
         break 
+      lv = fixStr lv, '    '
       data += "#{lv} [#{dt}] #{scope} "
 
       body = ''
@@ -201,7 +209,7 @@ createFileWriter = ()->
 
 
     console.log 'appendFile', 'go'
-    filename = createEpic.conf.file.prefix + fileYMD + ".txt"
+    filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
     fs.appendFile filename, data, (err)->
       console.log 'appendFile', err
       lock = false
@@ -215,14 +223,17 @@ createFileWriter = ()->
     _appendToFile()
 
   return _writer
-createEpic.writer =
+
+EpicLog.createFileWriter = createFileWriter
+EpicLog.writer =
   console: (lv, dt, scope, args)->
     # console.log 'filter', filter.enabled scope
-    if lv in ['log ', 'verb'] and not filter.enabled scope
+    if lv in ['log', 'verb'] and not filter.enabled scope
       return
+    lv = fixStr lv, '    '
     console.log lv, '[' + dt + ']',  scope, args...
 
   file: createFileWriter()
 
 
-module.exports = exports = createEpic
+module.exports = exports = EpicLog

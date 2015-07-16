@@ -1,5 +1,5 @@
 process.env.DEBUG = "*"
-epic = require '../src'
+elog = require '../src'
 
 # debug = require('debug')('spec')
 
@@ -7,14 +7,14 @@ epic = require '../src'
 describe 'spec', ()->    
   it 'default ', (done)->    
     cnt = 0
-    epic.configure
+    elog.configure
       writer:
         console: true
         test: (lv, dt, scope, args)->
           cnt++
           if cnt is 1 
             expect lv 
-              .toBe 'log '
+              .toBe 'log'
           else if cnt is 2
             expect scope
               .toBe 'spec:sub'
@@ -27,22 +27,22 @@ describe 'spec', ()->
               .toBe 'warn'
             done()
 
-    spec = epic.create 'spec'
+    spec = elog.create 'spec'
     spec.log 'test'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.info 'text'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.warn 'crash?'
 
 
   it 'disable pattern 2 ', (done)->    
     cnt = 0
-    epic.configure
+    elog.configure
       consoleFilter: '*, -all:spec'   
       writer:
         console: true 
         test: (lv, dt, scope, args)->
-          if lv in ['log ', 'verb'] and not epic.filter.enabled scope
+          if lv in ['log', 'verb'] and not elog.filter.enabled scope
             return
           cnt++
           if cnt is 1 
@@ -53,15 +53,15 @@ describe 'spec', ()->
               .toBe 'warn last'
             done()
 
-    console.log 'pattern', epic.filter
-    all = epic.create 'all'
+    console.log 'pattern', elog.filter
+    all = elog.create 'all'
 
-    spec = all.create 'spec'
+    spec = all.indent 'spec'
     spec.log 'disable log'  # not print
-    sub = spec.create 'sub' 
+    sub = spec.indent 'sub' 
     sub.info 'info text'         # print info
     sub.log 'log sub'       # not
-    sub2 = spec.create 'sub2'
+    sub2 = spec.indent 'sub2'
     sub2.warn 'crash?'      # print warn
     sub2.log 'log 2'        # not
 
@@ -70,12 +70,12 @@ describe 'spec', ()->
 
   it 'disable log ', (done)->    
     cnt = 0
-    epic.configure
+    elog.configure
       consoleFilter: '*, -spec:*'   
       writer:
         console: true 
         test: (lv, dt, scope, args)->
-          if lv in ['log ', 'verb'] and not epic.filter.enabled scope
+          if lv in ['log', 'verb'] and not elog.filter.enabled scope
             return
           cnt++
           if cnt is 1 
@@ -88,32 +88,41 @@ describe 'spec', ()->
               .toBe 'warn last'
             done()
 
-    spec = epic.create 'spec'
+    spec = elog.create 'spec'
     spec.log 'disable log'  # print
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.info 'text'         # print info
-    sub = spec.create 'sub2'
+    sub = spec.indent 'sub2'
     sub.warn 'crash?'       # print warn
     sub.log 'log not '      # not
 
     spec.warn 'warn last'   # print
 
+  it 'fileWriter seperate by date', (done)->
+
+    elog.configure 
+      file:
+        prefix: 'log-'
+    writer = elog.createFileWriter()
+    writer 'info', '2015-07-01 10:10:10', 's', '1'
+    writer 'info', '2015-07-02 10:10:10', 's', '2'
+    done()
 
   # return
   it 'file log ', (done)->    
     cnt = 0
-    epic.configure
+    elog.configure
       consoleFilter: '-*'  
       file:
         prefix: 'log-'
       writer:
         file: true
 
-    spec = epic.create 'spec'
+    spec = elog.create 'spec'
     spec.log 'disable log'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.info 'text'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.warn 'crash?'
 
     spec.warn 'warn with data', {a: 'value', b:123123}
@@ -186,14 +195,14 @@ JavaScript calls the toString method automatically when a
     cnt = 0
     conf = 
       filepath: './test-conf.json'
-    epic.configure conf
+    elog.configure conf
 
 
-    epic.setWriter (lv, dt, scope, args)->
+    elog.setWriter (lv, dt, scope, args)->
       cnt++
       if cnt is 1 
         expect lv 
-          .toBe 'log '
+          .toBe 'log'
       else if cnt is 2
         expect scope
           .toBe 'spec:sub'
@@ -205,14 +214,14 @@ JavaScript calls the toString method automatically when a
         expect lv 
           .toBe 'warn'
 
-        epic.watcher.close()
+        elog.watcher.close()
         done()
 
-    spec = epic.create 'spec'
+    spec = elog.create 'spec'
     spec.log 'test'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.info 'text'
-    sub = spec.create 'sub'
+    sub = spec.indent 'sub'
     sub.warn 'crash?'
  
   it 'file log - long ', (done)->    
@@ -225,17 +234,17 @@ JavaScript calls the toString method automatically when a
         console: true  
         file: true
 
-    epic.configure conf
-    logConf = epic.create 'conf'
+    elog.configure conf
+    logConf = elog.create 'conf'
     logConf.info 'json', JSON.stringify conf, null, 4
 
     for i in [0...10]
 
-      spec = epic.create 'long' + i
+      spec = elog.create 'long' + i
       spec.log 'file log - long', Array(60).join '='
-      sub = spec.create 'sub'
+      sub = spec.indent 'sub'
       sub.info 'text'
-      sub = spec.create 'sub'
+      sub = spec.indent 'sub'
       sub.warn 'crash?'
 
       spec.warn 'warn with data', {a: 'value', b:123123}
