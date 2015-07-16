@@ -1,9 +1,9 @@
 {
   "name": "epic-log",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "log system",
   "main": "lib",
-  "scripts": { 
+  "scripts": {
     "build": "coffee -c -b -o lib src  ",
     "clean": "rm -r lib",
     "prepublish": "npm run-script build",
@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/js-seth-h/epic-log",
   "dependencies": {
+    "colors": "^1.1.2"
   },
   "devDependencies": {
     "coffee-script": "^1.7.1"

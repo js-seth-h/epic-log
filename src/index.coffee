@@ -154,11 +154,48 @@ yyyymmdd = (dt)->
   dd  = dt.getDate().toString();
   return yyyy + (mm[1]?mm:"0"+mm[0]) + (dd[1]?dd:"0"+dd[0]); # padding
 
+EpicLog.toText = (lv, dt, scope, args, opt ={})->
+  util = require 'util'  
+  lv = fixStr lv, '    '
 
+  if opt.decoLv
+    lv = opt.decoLv lv
+  if opt.decoScope
+    scope = opt.decoScope scope
+  header = "#{lv} [#{dt}] [#{scope}] " 
+  body = ''
+  attach = ''
+  aInx = 0
+  # console.log 'to Text args', args
+  for a in args
+    if _isString a 
+      body += " " + a 
+    else if _isError a
+      msg = a.toString()
+      stack = a.stack
+      # msg = opt.decoErr msg if opt.decoErr
+      stack = opt.decoErr stack if opt.decoErr
+      body += msg
+      attach += "\n$err:= \n" + stack 
+    else
+      body += " $" + aInx
+
+
+      if _isFunction a 
+        str = a.toString(2)
+      else if _isString a
+        str = a.toString()
+      else
+        str = util.inspect a, showHidden: true, depth: 10
+      attach += "\n$#{aInx}:= " + str
+      aInx++
+
+  body = body + attach
+  body = body.split("\n").map((l)-> "     " + l).join "\n"
+  return header + body
 
 createFileWriter = ()->
   fs = require 'fs'
-  util = require 'util'
   bufLine = []
   lock = false
   _appendToFile = ()->
@@ -173,45 +210,26 @@ createFileWriter = ()->
     loop
       line = bufLine.shift()
       [lv, dt, scope, args] = line
-      
+
       yyyymmdd = dt.slice(0,10).replace /-/gi, ''
       if fileYMD is null
         fileYMD = yyyymmdd
       else if fileYMD != yyyymmdd
         bufLine.unshift line
         break 
-      lv = fixStr lv, '    '
-      data += "#{lv} [#{dt}] #{scope} "
 
-      body = ''
-      attach = ''
-      aInx = 0
-      for a in args
-        if _isString a 
-          body += " " + a 
-        else
-          body += " $" + aInx
 
-          if _isFunction a 
-            str = a.toString(2)
-          else if _isString a
-            str = a.toString()
-          else
-            str = util.inspect a, showHidden: true, depth: 10
-          attach += "\n#{aInx}: " + str
-          aInx++
+      text = EpicLog.toText lv, dt, scope, args 
 
-      body = body + attach
-      body = body.split("\n").map((l)-> "     " + l).join "\n"
-      data += body + "\n"
+      data += text + "\n"
 
       break if bufLine.length is 0 
 
 
-    console.log 'appendFile', 'go'
+    # console.log 'appendFile', 'go'
     filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
     fs.appendFile filename, data, (err)->
-      console.log 'appendFile', err
+      # console.log 'appendFile', err
       lock = false
       _appendToFile()
 
@@ -224,15 +242,57 @@ createFileWriter = ()->
 
   return _writer
 
-EpicLog.createFileWriter = createFileWriter
-EpicLog.writer =
-  console: (lv, dt, scope, args)->
+createConsoleWriter = ()->
+  colors = require 'colors/safe'
+
+  # colArr = 'black,red,green,yellow,blue,magenta,cyan,white'.split ','
+  colArr = 'cyan,red,green,yellow,magenta'.split ','
+  colMap = {}
+  inx = 0
+  _coloredScope = (scope)->
+    seed = scope.split(':')[0]
+
+    if not colMap[seed]
+      colMap[seed] = colArr[inx]
+      inx++
+      inx = 0 if inx is colArr.length
+    
+    return colors[colMap[seed]] colors.bold scope
+    # console.log 'colored' , escape colored
+    # return colored
+
+  # fnMap =
+  #   'err,warn,info,verb,log'
+
+  _coloredLv = (lv)-> 
+    cMap =
+      err : 'magenta'  
+      warn: 'yellow' 
+      info: 'cyan' 
+      verb: 'grey' 
+      log : 'grey'  
+    c = cMap[lv.trim()]
+    # console.log '_coloredLv', lv, c 
+    return colors[c] colors.bold lv
+
+  _writer = (lv, dt, scope, args)->
     # console.log 'filter', filter.enabled scope
     if lv in ['log', 'verb'] and not filter.enabled scope
       return
-    lv = fixStr lv, '    '
-    console.log lv, '[' + dt + ']',  scope, args...
+    # lv = fixStr lv, '    '
+    # console.log lv, '[' + dt + ']',  scope, args...
 
+
+    console.log EpicLog.toText lv, dt, scope, args,
+      decoLv : _coloredLv
+      decoScope: _coloredScope 
+      decoErr: (str)-> colors.red colors.bold str 
+  return _writer
+
+EpicLog.createFileWriter = createFileWriter
+EpicLog.createConsoleWriter = createConsoleWriter
+EpicLog.writer =
+  console: createConsoleWriter() 
   file: createFileWriter()
 
 

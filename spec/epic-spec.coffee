@@ -67,7 +67,41 @@ describe 'spec', ()->
 
     all.warn 'warn last'    # print 
 
+  it 'Error ', (done)->    
+    cnt = 0
+    elog.configure
+      file:
+        prefix: './test/err-'
+      writer:
+        file: true
+        console: true
+        test: (lv, dt, scope, args)->
+          if lv in ['log', 'verb'] and not elog.filter.enabled scope
+            return
+          cnt++
+          if cnt is 1 
+            expect lv 
+              .toBe 'err'
+          else if cnt is 2
+            expect scope
+              .toBe 'spec:sub'
+            expect lv 
+              .toBe 'info'
+            expect args[0]
+              .toBe 'text'
+          else             
+            expect lv 
+              .toBe 'warn'
+            done()
 
+    spec = elog.create 'spec'
+    spec.err new Error 'Fake Err'
+    sub = spec.indent 'sub'
+    sub.info 'text'
+    sub = spec.indent 'sub'
+    sub.warn 'crash?'
+ 
+  # return 
   it 'disable log ', (done)->    
     cnt = 0
     elog.configure
@@ -229,7 +263,7 @@ JavaScript calls the toString method automatically when a
     conf = 
       file:
         prefix: './test/log-'
-      consoleFilter: 'long4'   
+      consoleFilter: 'long4, long9'   
       writer:
         console: true  
         file: true
