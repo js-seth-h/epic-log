@@ -102,7 +102,7 @@ describe 'spec', ()->
 
     elog.configure 
       file:
-        prefix: 'log-'
+        prefix: './test/log-'
     writer = elog.createFileWriter()
     writer 'info', '2015-07-01 10:10:10', 's', '1'
     writer 'info', '2015-07-02 10:10:10', 's', '2'
@@ -114,7 +114,7 @@ describe 'spec', ()->
     elog.configure
       consoleFilter: '-*'  
       file:
-        prefix: 'log-'
+        prefix: './test/log-'
       writer:
         file: true
 
@@ -228,7 +228,7 @@ JavaScript calls the toString method automatically when a
     cnt = 0
     conf = 
       file:
-        prefix: 'log-'
+        prefix: './test/log-'
       consoleFilter: 'long4'   
       writer:
         console: true  
