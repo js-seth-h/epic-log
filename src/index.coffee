@@ -81,6 +81,16 @@ filter =
     return filter.cached_enabled[name]
 
 
+
+
+CODE_SPACE = 'abcdefghjkmnpqrstvwxyz1234567890'
+randomCode = (size)->
+  result = ''
+  for inx in [0...size]
+    at = Math.floor CODE_SPACE.length * Math.random()
+    result += CODE_SPACE[at]
+  return result
+
 EpicLog = (scope)->
   epic = 
     err : (args...)-> EpicLog.write 'err', scope, args
@@ -88,9 +98,11 @@ EpicLog = (scope)->
     info: (args...)-> EpicLog.write 'info', scope, args
     verb: (args...)-> EpicLog.write 'verb', scope, args
     log : (args...)-> EpicLog.write 'log', scope, args 
-    indent: (subScope)->
+    indent: (subScope = null)->
       if scope is null
         return EpicLog subScope
+      if subScope is null
+        subScope = randomCode 4
       return EpicLog scope + ':' + subScope
   return epic
 

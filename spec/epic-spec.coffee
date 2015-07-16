@@ -34,6 +34,35 @@ describe 'spec', ()->
     sub = spec.indent 'sub'
     sub.warn 'crash?'
 
+  it 'indent ramdom ', (done)->    
+    cnt = 0
+    elog.configure
+      writer:
+        console: true
+        test: (lv, dt, scope, args)->
+          cnt++
+          if cnt is 1 
+            expect lv 
+              .toBe 'log'
+          else if cnt is 2
+            # expect scope
+            #   .toBe 'spec:sub'
+            expect lv 
+              .toBe 'info'
+            expect args[0]
+              .toBe 'text'
+          else             
+            expect lv 
+              .toBe 'warn'
+            done()
+
+    spec = elog.create 'spec'
+    spec.log 'test'
+    sub = spec.indent()
+    sub.info 'text'
+    sub2 = spec.indent()
+    sub2.warn 'crash?'
+
 
   it 'disable pattern 2 ', (done)->    
     cnt = 0
