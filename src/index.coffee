@@ -168,13 +168,15 @@ yyyymmdd = (dt)->
 
 EpicLog.toText = (lv, dt, scope, args, opt ={})->
   util = require 'util'  
-  lv = fixStr lv, '    '
+  # lv = fixStr lv, '    '
 
+  padLen = 4 - lv.length
+  pad = '      '[0...padLen]
   if opt.decoLv
     lv = opt.decoLv lv
   if opt.decoScope
     scope = opt.decoScope scope
-  header = "#{lv} [#{dt}] [#{scope}] " 
+  header = "[#{lv}]#{pad} [#{dt}] [#{scope}] "
   body = ''
   attach = ''
   aInx = 0
@@ -203,7 +205,7 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
       aInx++
 
   body = body + attach
-  body = body.split("\n").map((l)-> "     " + l).join "\n"
+  body = body.split("\n").map((l)-> "     " + l).join("\n").trim()
   return header + body
 
 createFileWriter = ()->
@@ -292,9 +294,6 @@ createConsoleWriter = ()->
     # console.log 'filter', filter.enabled scope
     if lv in ['log', 'verb'] and not filter.enabled scope
       return
-    # lv = fixStr lv, '    '
-    # console.log lv, '[' + dt + ']',  scope, args...
-
 
     console.log EpicLog.toText lv, dt, scope, args,
       decoLv : _coloredLv
