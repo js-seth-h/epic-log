@@ -262,7 +262,8 @@ createConsoleWriter = ()->
   colMap = {}
   inx = 0
   _coloredScope = (scope)->
-    seed = scope.split(':')[0]
+    # seed = scope.split(':')[0]
+    seed = scope
 
     if not colMap[seed]
       colMap[seed] = colArr[inx]

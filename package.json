@@ -1,6 +1,6 @@
 {
   "name": "epic-log",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "log system",
   "main": "lib",
   "scripts": {
