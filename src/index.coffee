@@ -112,9 +112,6 @@ EpicLog.create = (scope)->
   EpicLog scope
 
 EpicLog.configure = (conf)->
-  # Clear
-  emitter.removeAllListeners()
-  filter.clear()
 
   if conf.filepath
     # EpicLog.conf = require conf.filepath   
@@ -133,6 +130,9 @@ EpicLog.configure = (conf)->
 
 EpicLog.build = ()->
   conf = EpicLog.conf
+  # Clear
+  emitter.removeAllListeners()
+  filter.clear()
   # Set Writer
   for own k, v of conf.writer
     if v is false
