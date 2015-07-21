@@ -27,12 +27,14 @@ describe 'spec', ()->
               .toBe 'warn'
             done()
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.log 'test'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.info 'text'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.warn 'crash?'
+
+  # return 
 
   it 'indent ramdom ', (done)->    
     cnt = 0
@@ -56,18 +58,18 @@ describe 'spec', ()->
               .toBe 'warn'
             done()
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.log 'test'
-    sub = spec.indent()
+    sub = spec.scope()
     sub.info 'text'
-    sub2 = spec.indent()
+    sub2 = spec.scope()
     sub2.warn 'crash?'
 
 
   it 'disable pattern 2 ', (done)->    
     cnt = 0
     elog.configure
-      consoleFilter: '*, -all:spec'   
+      consoleFilter: '*, -all:spec*'   
       writer:
         console: true 
         test: (lv, dt, scope, args)->
@@ -83,14 +85,14 @@ describe 'spec', ()->
             done()
 
     console.log 'pattern', elog.filter
-    all = elog.create 'all'
+    all = elog.scope 'all'
 
-    spec = all.indent 'spec'
+    spec = all.scope 'spec'
     spec.log 'disable log'  # not print
-    sub = spec.indent 'sub' 
+    sub = spec.scope 'sub' 
     sub.info 'info text'         # print info
     sub.log 'log sub'       # not
-    sub2 = spec.indent 'sub2'
+    sub2 = spec.scope 'sub2'
     sub2.warn 'crash?'      # print warn
     sub2.log 'log 2'        # not
 
@@ -123,11 +125,11 @@ describe 'spec', ()->
               .toBe 'warn'
             done()
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.err new Error 'Fake Err'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.info 'text'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.warn 'crash?'
  
   # return 
@@ -151,11 +153,11 @@ describe 'spec', ()->
               .toBe 'warn last'
             done()
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.log 'disable log'  # print
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.info 'text'         # print info
-    sub = spec.indent 'sub2'
+    sub = spec.scope 'sub2'
     sub.warn 'crash?'       # print warn
     sub.log 'log not '      # not
 
@@ -181,11 +183,11 @@ describe 'spec', ()->
       writer:
         file: true
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.log 'disable log'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.info 'text'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.warn 'crash?'
 
     spec.warn 'warn with data', {a: 'value', b:123123}
@@ -280,11 +282,11 @@ JavaScript calls the toString method automatically when a
         elog.watcher.close()
         done()
 
-    spec = elog.create 'spec'
+    spec = elog.scope 'spec'
     spec.log 'test'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.info 'text'
-    sub = spec.indent 'sub'
+    sub = spec.scope 'sub'
     sub.warn 'crash?'
  
   it 'file log - long ', (done)->    
@@ -298,16 +300,16 @@ JavaScript calls the toString method automatically when a
         file: true
 
     elog.configure conf
-    logConf = elog.create 'conf'
+    logConf = elog.scope 'conf'
     logConf.info 'json', JSON.stringify conf, null, 4
 
     for i in [0...10]
 
-      spec = elog.create 'long' + i
+      spec = elog.scope 'long' + i
       spec.log 'file log - long', Array(60).join '='
-      sub = spec.indent 'sub'
+      sub = spec.scope 'sub'
       sub.info 'text'
-      sub = spec.indent 'sub'
+      sub = spec.scope 'sub'
       sub.warn 'crash?'
 
       spec.warn 'warn with data', {a: 'value', b:123123}
@@ -373,3 +375,21 @@ JavaScript calls the toString method automatically when a
           JavaScript calls the toString method automatically when a 
       """
     done()
+
+  it 'scope shadowing ', (done)->    
+    cnt = 0
+    elog.configure
+      writer:
+        console: true
+        test: (lv, dt, scope, args)-> 
+          if args[0] is 'test'
+            expect lv
+              .toBe 'log'
+          
+          if args[0] is 'done'
+            done()
+    elog.scope 'spec', (elog)->
+      elog.log 'test'
+      elog.warn 'crash?'
+      elog.warn 'done'
+

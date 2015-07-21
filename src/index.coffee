@@ -106,12 +106,16 @@ EpicLog = (scope)->
       if subScope is null
         subScope = randomCode 4
       return EpicLog scope + ':' + subScope
-    scope: (subScope = null, fnInScope)->
+    scope: (subScope = null, fnInScope = undefined)->
       if scope is null
         return EpicLog subScope
       if subScope is null
         subScope = randomCode 4
-      fnInScope EpicLog scope + ':' + subScope
+
+      scopeLog = EpicLog scope + ':' + subScope
+      if fnInScope isnt undefined
+        fnInScope scopeLog
+      return scopeLog
   return epic
 
 EpicLog.fixStr = fixStr
@@ -119,8 +123,11 @@ EpicLog.fixStr = fixStr
 EpicLog.create = (scope)->
   EpicLog scope
 
-EpicLog.scope = (scope)->
-  EpicLog scope
+EpicLog.scope = (scope, fnInScope = undefined)->
+  elog = EpicLog scope
+  if fnInScope isnt undefined
+    fnInScope elog
+  return elog
 
 EpicLog.configure = (conf)->
 
