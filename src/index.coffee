@@ -41,20 +41,22 @@ filter =
         i++
         continue
       # ignore empty strings 
-      # namespaces = split[i].replace(/\*/g, '.*?')
-      namespace = split[i]
+      namespace = split[i].replace(/\*/g, '.*?')
+      # namespace = split[i]
 
       pat = filter.names 
       if namespace[0] == '-'
         pat = filter.skips
         namespace = namespace.substr(1)
 
-      if namespace.indexOf('*') >= 0 
-        namespace = namespace.replace(/\*/g, '.*?')
-        pat.push new RegExp '^' + namespace + '$'
-      else 
-        pat.push new RegExp '^' + namespace + '$'
-        pat.push new RegExp '^' + namespace + ':.*?$'
+      pat.push new RegExp '^' + namespace + '$'
+
+      # if namespace.indexOf('*') >= 0 
+      #   namespace = namespace.replace(/\*/g, '.*?')
+      #   pat.push new RegExp '^' + namespace + '$'
+      # else 
+      #   pat.push new RegExp '^' + namespace + '$'
+      #   pat.push new RegExp '^' + namespace + ':.*?$'
       i++
 
     # console.log 'filter', filter
@@ -104,11 +106,20 @@ EpicLog = (scope)->
       if subScope is null
         subScope = randomCode 4
       return EpicLog scope + ':' + subScope
+    scope: (subScope = null, fnInScope)->
+      if scope is null
+        return EpicLog subScope
+      if subScope is null
+        subScope = randomCode 4
+      fnInScope EpicLog scope + ':' + subScope
   return epic
 
 EpicLog.fixStr = fixStr
 
 EpicLog.create = (scope)->
+  EpicLog scope
+
+EpicLog.scope = (scope)->
   EpicLog scope
 
 EpicLog.configure = (conf)->
