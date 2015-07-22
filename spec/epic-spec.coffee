@@ -34,7 +34,6 @@ describe 'spec', ()->
     sub = spec.scope 'sub'
     sub.warn 'crash?'
 
-  # return 
 
   it 'indent ramdom ', (done)->    
     cnt = 0
@@ -305,9 +304,9 @@ JavaScript calls the toString method automatically when a
 
     for i in [0...10]
 
-      spec = elog.scope 'long' + i
+      spec = elog.scope 'long' + i, true
       spec.log 'file log - long', Array(60).join '='
-      sub = spec.scope 'sub'
+      sub = spec.scope 'sub', true
       sub.info 'text'
       sub = spec.scope 'sub'
       sub.warn 'crash?'

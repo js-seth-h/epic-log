@@ -93,6 +93,19 @@ randomCode = (size)->
     result += CODE_SPACE[at]
   return result
 
+_createScope = (parentScope = null, subScope = null, useId = false)-> 
+  if subScope is null
+    subScope = randomCode 4
+    useId = false
+  if useId is true  
+    subScope += "(#{randomCode 4})" 
+
+  newScope = parentScope + ':' + subScope
+  unless parentScope
+    newScope = subScope
+  scopeLog = EpicLog newScope    
+  return scopeLog
+
 EpicLog = (scope)->
   epic = 
     err : (args...)-> EpicLog.write 'err', scope, args
@@ -100,20 +113,14 @@ EpicLog = (scope)->
     info: (args...)-> EpicLog.write 'info', scope, args
     verb: (args...)-> EpicLog.write 'verb', scope, args
     log : (args...)-> EpicLog.write 'log', scope, args 
-    indent: (subScope = null)->
+    indent: (subScope = null)-> # deprecated, legacy
       if scope is null
         return EpicLog subScope
       if subScope is null
         subScope = randomCode 4
       return EpicLog scope + ':' + subScope
-    scope: (subScope = null)->
-      if scope is null
-        return EpicLog subScope
-      if subScope is null
-        subScope = randomCode 4
-
-      scopeLog = EpicLog scope + ':' + subScope
-      return scopeLog
+    scope: (subScope = null, useId = false)-> 
+      return _createScope scope, subScope, useId
     using: (fnInScope)->
       fnInScope epic
 
@@ -121,12 +128,11 @@ EpicLog = (scope)->
 
 EpicLog.fixStr = fixStr
 
-EpicLog.create = (scope)->
+EpicLog.create = (scope)-> # deprecated, legacy
   EpicLog scope
 
-EpicLog.scope = (scope)->
-  elog = EpicLog scope
-  return elog
+EpicLog.scope = (scope, useId)->
+  return _createScope null, scope, useId
 
 EpicLog.configure = (conf)->
 
