@@ -388,7 +388,7 @@ JavaScript calls the toString method automatically when a
           
           if args[0] is 'done'
             done()
-    elog.scope 'spec', (elog)->
+    elog.scope('spec').using (elog)->
       elog.log 'test'
       elog.warn 'crash?'
       elog.warn 'done'

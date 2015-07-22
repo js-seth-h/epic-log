@@ -85,7 +85,7 @@ filter =
 
 
 
-CODE_SPACE = 'abcdefghjkmnpqrstvwxyz1234567890'
+CODE_SPACE = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890'
 randomCode = (size)->
   result = ''
   for inx in [0...size]
@@ -106,16 +106,17 @@ EpicLog = (scope)->
       if subScope is null
         subScope = randomCode 4
       return EpicLog scope + ':' + subScope
-    scope: (subScope = null, fnInScope = undefined)->
+    scope: (subScope = null)->
       if scope is null
         return EpicLog subScope
       if subScope is null
         subScope = randomCode 4
 
       scopeLog = EpicLog scope + ':' + subScope
-      if fnInScope isnt undefined
-        fnInScope scopeLog
       return scopeLog
+    using: (fnInScope)->
+      fnInScope epic
+
   return epic
 
 EpicLog.fixStr = fixStr
@@ -123,10 +124,8 @@ EpicLog.fixStr = fixStr
 EpicLog.create = (scope)->
   EpicLog scope
 
-EpicLog.scope = (scope, fnInScope = undefined)->
+EpicLog.scope = (scope)->
   elog = EpicLog scope
-  if fnInScope isnt undefined
-    fnInScope elog
   return elog
 
 EpicLog.configure = (conf)->
