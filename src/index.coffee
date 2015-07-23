@@ -223,6 +223,7 @@ EpicLog.toText = (lv, dt, scope, args, opt = {})->
   opt.decoLv = opt.decoLv or (t)-> t
   opt.decoScope = opt.decoScope or (t)-> t
   opt.decoBody = opt.decoBody or (t)-> t
+  opt.inspectColor =  opt.inspectColor or false
 
   header = "[#{opt.decoLv lv}]#{pad} [#{dt}] [#{opt.decoScope scope}] "
   body = ''
@@ -246,7 +247,7 @@ EpicLog.toText = (lv, dt, scope, args, opt = {})->
       if _isFunction a 
         str = a.toString(2) 
       else
-        str = util.inspect a, showHidden: true, depth: 10
+        str = util.inspect a, showHidden: false, depth: 10, colors: opt.inspectColor
 
       if lv isnt 'dbg' and opt.limitAttachLine 
         lines = str.split("\n")
@@ -396,6 +397,7 @@ createConsoleWriter = (conf = {})->
       decoScope: _coloredScope 
       decoErr: (str)-> colors.red colors.bold str 
       limitAttachLine: EpicLog.conf?.console?.limitAttachLine or 5 
+      inspectColor : true
 
     if lv is LV_DEBUG
       opt.decoBody = (body)->  colors.cyan  body
