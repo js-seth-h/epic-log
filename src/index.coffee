@@ -15,6 +15,13 @@ _isError = (obj)->
   # _toString.call(obj) is "[object Error]" # Error을 상속받으면 부정확.
   return obj instanceof Error
 
+LV_ERR = 'err'
+LV_WARN = 'warn'
+LV_INFO = 'info'
+LV_VERB = 'verb'
+LV_LOG  = 'log' 
+LV_DEBUG = 'dbg'
+
 
 emitter = new events.EventEmitter()
 
@@ -108,12 +115,28 @@ _createScope = (parentScope = null, subScope = null, useId = false)->
   return scopeLog
 
 EpicLog = (scope)->
+
+  _createLoggingFn = (lv)->
+    _fn = (args...)-> 
+      EpicLog.write lv, scope, args  
+    for v, inx in '-=*'
+      do (v, inx)->
+        _fn['hr'+(inx)] = (title = '', barLen = 25)->
+          bar = new Array(barLen).join v 
+          unless title
+            title = new Array(10).join(v)
+          else 
+            title = "  #{title}  "
+          _fn bar + title + bar
+    return _fn
+
   epic = 
-    err : (args...)-> EpicLog.write 'err', scope, args
-    warn: (args...)-> EpicLog.write 'warn', scope, args
-    info: (args...)-> EpicLog.write 'info', scope, args
-    verb: (args...)-> EpicLog.write 'verb', scope, args
-    log : (args...)-> EpicLog.write 'log', scope, args 
+    err : _createLoggingFn LV_ERR
+    warn: _createLoggingFn LV_WARN
+    info: _createLoggingFn LV_INFO
+    verb: _createLoggingFn LV_VERB
+    log : _createLoggingFn LV_LOG
+    debug: _createLoggingFn LV_DEBUG
     indent: (subScope = null)-> # deprecated, legacy
       if scope is null
         return EpicLog subScope
@@ -219,10 +242,11 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
       else
         str = util.inspect a, showHidden: true, depth: 10
 
-      if opt.limitAttachLine 
+      if lv isnt 'dbg' and opt.limitAttachLine 
         lines = str.split("\n")
         if lines.length > opt.limitAttachLine
-          str = lines[0...opt.limitAttachLine].join("\n") + "\n------  MORE  ------"
+          ll = lines.length
+          str = lines[0...opt.limitAttachLine].join("\n") + "\n------  MORE (#{opt.limitAttachLine} of #{ll} lines)  ------"
 
 
       attach += "\n$#{aInx}:= " + str
@@ -230,6 +254,8 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
 
   body = body + attach
   body = body.split("\n").map((l)-> "     " + l).join("\n").trim()
+  if opt.decoBody
+    body = opt.decoBody body
   return header + body
 
 yyyymmdd = (dt)-> 
@@ -334,18 +360,19 @@ createConsoleWriter = (conf = {})->
 
   _coloredLv = (lv)-> 
     cMap =
-      err : 'magenta'  
+      err : 'red'  
       warn: 'yellow' 
       info: 'cyan' 
       verb: 'grey' 
       log : 'grey'  
+      dbg : 'white'
     c = cMap[lv.trim()]
     # console.log '_coloredLv', lv, c 
     return colors[c] colors.bold lv
 
   _writer = (lv, dt, scope, args)->
     # console.log 'filter', filter.enabled scope
-    if lv in ['log', 'verb'] and not filter.enabled scope
+    if lv in [LV_LOG, LV_VERB] and not filter.enabled scope
       return
 
     opt = 
@@ -353,6 +380,9 @@ createConsoleWriter = (conf = {})->
       decoScope: _coloredScope 
       decoErr: (str)-> colors.red colors.bold str 
       limitAttachLine: EpicLog.conf?.console?.limitAttachLine or 5 
+
+    if lv is LV_DEBUG
+      opt.decoBody = (body)->  colors.cyan  body
     console.log EpicLog.toText lv, dt, scope, args, opt
   return _writer
 

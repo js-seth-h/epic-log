@@ -27,6 +27,12 @@ describe 'spec', ()->
     sub = spec.scope 'sub2'
     sub.info 'text with type', 1, true, false, 'string', new Date(), [1..4], { label:'this is object'}, ()-> console.log 'good'
     sub = spec.scope 'sub'
+    sub.info.hr1()
+    sub.debug.hr2()
+
+    sub.log.hr0()
+    sub.log.hr1()
+    sub.log.hr2 'STAR'
     sub.warn 'done'
 
 
@@ -367,9 +373,9 @@ JavaScript calls the toString method automatically when a
           }]
         , {a: 'value', b:123123}
       spec.info 'arr =', [1,2,3]
-      spec.info 'func =', (x)-> console.log 'test fn'
+      spec.debug 'func =', (x)-> console.log 'test fn'
 
-      spec.info """
+      spec.debug """
           The Function object overrides the toString method inherited from Object;
           it does not inherit Object.prototype.toString. For Function objects, 
           the toString method returns a string representation of the object 
