@@ -128,6 +128,8 @@ EpicLog = (scope)->
           else 
             title = "  #{title}  "
           _fn bar + title + bar
+
+    _fn.hr = _fn.hr0
     return _fn
 
   epic = 
