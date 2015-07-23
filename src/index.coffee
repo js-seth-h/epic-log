@@ -114,8 +114,7 @@ _createScope = (parentScope = null, subScope = null, useId = false)->
   scopeLog = EpicLog newScope    
   return scopeLog
 
-EpicLog = (scope)->
-
+EpicLog = (scope)-> 
   _createLoggingFn = (lv)->
     _fn = (args...)-> 
       EpicLog.write lv, scope, args  
@@ -139,17 +138,21 @@ EpicLog = (scope)->
     verb: _createLoggingFn LV_VERB
     log : _createLoggingFn LV_LOG
     debug: _createLoggingFn LV_DEBUG
-    indent: (subScope = null)-> # deprecated, legacy
-      if scope is null
-        return EpicLog subScope
-      if subScope is null
-        subScope = randomCode 4
-      return EpicLog scope + ':' + subScope
+    # indent: (subScope = null)-> # deprecated, legacy
+    #   if scope is null
+    #     return EpicLog subScope
+    #   if subScope is null
+    #     subScope = randomCode 4
+    #   return EpicLog scope + ':' + subScope
     scope: (subScope = null, useId = false)-> 
       return _createScope scope, subScope, useId
     using: (fnInScope)->
       fnInScope epic
 
+    mixAt: (obj)->
+      for own fnName, fn of epic
+        obj[fnName] = fn
+        
   return epic
 
 EpicLog.fixStr = fixStr

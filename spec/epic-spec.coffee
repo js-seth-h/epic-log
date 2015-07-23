@@ -408,3 +408,26 @@ JavaScript calls the toString method automatically when a
       elog.warn 'crash?'
       elog.warn 'done', 'scope shadowing'
 
+
+  it 'scope mixAt ', (done)->    
+    cnt = 0
+    elog.configure 
+      writer: 
+        console: true
+        test: (lv, dt, scope, args)-> 
+          if args[0] is 'test'
+            expect lv
+              .toBe 'log'
+          
+          if args[0] is 'done'
+            done()
+    log  = elog.scope('spec')
+
+    dummy = {}
+    log.mixAt dummy
+    dummy.log 'test'
+    dummy.warn 'crash?'
+    dummy.scope("in").using (log)->
+      log.log 'dev-dummy' 
+    dummy.warn 'done', 'scope mixAt'
+
