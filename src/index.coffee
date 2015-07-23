@@ -201,7 +201,7 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
   aInx = 0
   # console.log 'to Text args', args
   for a in args
-    if not _isObject(a) and not _isFunction(a) and not _isArray(a)
+    if not ('object' is typeof a ) and not ('function' is typeof a )
       body += " " + a 
     else if _isError a
       msg = a.toString()

@@ -18,14 +18,14 @@ describe 'spec', ()->
                 .toEqual 'log'
             when 'text with type'
               expect args.length
-                .toEqual 5
+                .toEqual 9
             when 'done'
               done()
 
     spec = elog.scope 'spec'
     spec.log 'test'
     sub = spec.scope 'sub2'
-    sub.info 'text with type', 1, true, false, 'string'
+    sub.info 'text with type', 1, true, false, 'string', new Date(), [1..4], { label:'this is object'}, ()-> console.log 'good'
     sub = spec.scope 'sub'
     sub.warn 'done'
 
@@ -129,7 +129,7 @@ describe 'spec', ()->
     sub.info 'text truncate?', Math.random()
     sub = spec.scope 'sub'
     sub.warn 'crash?'
-  
+   
   it 'disable log ', (done)->    
     # cnt = 0
     elog.configure
