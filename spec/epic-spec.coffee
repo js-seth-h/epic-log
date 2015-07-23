@@ -324,7 +324,7 @@ JavaScript calls the toString method automatically when a
       sub.warn 'crash?'
 
       spec.warn 'warn with data', {a: 'value', b:123123}
-      spec.info 'params = ',
+      spec.debug 'params = ',
         "totalCount": 74,
         "list": [
           {
@@ -373,7 +373,7 @@ JavaScript calls the toString method automatically when a
           }]
         , {a: 'value', b:123123}
       spec.info 'arr =', [1,2,3]
-      spec.debug 'func =', (x)-> console.log 'test fn'
+      spec.info 'func =', (x)-> console.log 'test fn'
 
       spec.debug """
           The Function object overrides the toString method inherited from Object;

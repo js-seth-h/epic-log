@@ -210,17 +210,18 @@ EpicLog.write = (lv, scope, args)->
 
 
 
-EpicLog.toText = (lv, dt, scope, args, opt ={})->
+EpicLog.toText = (lv, dt, scope, args, opt = {})->
   util = require 'util'  
   # lv = fixStr lv, '    '
 
   padLen = 4 - lv.length
   pad = '      '[0...padLen]
-  if opt.decoLv
-    lv = opt.decoLv lv
-  if opt.decoScope
-    scope = opt.decoScope scope
-  header = "[#{lv}]#{pad} [#{dt}] [#{scope}] "
+  
+  opt.decoLv = opt.decoLv or (t)-> t
+  opt.decoScope = opt.decoScope or (t)-> t
+  opt.decoBody = opt.decoBody or (t)-> t
+
+  header = "[#{opt.decoLv lv}]#{pad} [#{dt}] [#{opt.decoScope scope}] "
   body = ''
   attach = ''
   aInx = 0
@@ -256,8 +257,7 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
 
   body = body + attach
   body = body.split("\n").map((l)-> "     " + l).join("\n").trim()
-  if opt.decoBody
-    body = opt.decoBody body
+  body = opt.decoBody body
   return header + body
 
 yyyymmdd = (dt)-> 
