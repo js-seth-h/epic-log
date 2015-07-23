@@ -136,6 +136,42 @@ describe 'spec', ()->
     sub = spec.scope 'sub'
     sub.warn 'crash?'
    
+  it 'Error with hint', (done)->    
+    cnt = 0
+    elog.configure
+      file:
+        prefix: './test/err-'
+      writer:
+        file: true
+        console: true
+        test: (lv, dt, scope, args)->
+          if lv in ['log', 'verb'] and not elog.filter.enabled scope
+            return
+          cnt++
+          if cnt is 1 
+            expect lv 
+              .toBe 'err'
+          else if cnt is 2
+            expect scope
+              .toBe 'spec:sub'
+            expect lv 
+              .toBe 'info'
+            expect args[0]
+              .toBe 'text truncate?'
+          else             
+            expect lv 
+              .toBe 'warn'
+            done()
+
+    spec = elog.scope 'spec'
+    e =  new Error 'Fake Err'
+    e.hint = {name: 'ficent hint mock-up'}
+    spec.err e
+    sub = spec.scope 'sub'
+    sub.info 'text truncate?', Math.random()
+    sub = spec.scope 'sub'
+    sub.warn 'crash?'
+   
   it 'disable log ', (done)->    
     # cnt = 0
     elog.configure

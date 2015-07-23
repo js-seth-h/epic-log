@@ -240,6 +240,8 @@ EpicLog.toText = (lv, dt, scope, args, opt = {})->
       stack = opt.decoErr stack if opt.decoErr
       body += msg
       attach += "\n$err:= \n" + stack 
+      if a.hint
+        attach += "\n$hint:=" + util.inspect a.hint
     else
       body += " $" + aInx
 
