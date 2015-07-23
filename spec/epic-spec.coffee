@@ -60,37 +60,41 @@ describe 'spec', ()->
     sub2.warn 'crash?'
 
 
-  it 'disable pattern 2 ', (done)->    
-    cnt = 0
+  it 'disable pattern 2', (done)->    
+    # cnt = 0
     elog.configure
-      consoleFilter: '*, -all:spec*'   
+      console:
+        filter: '*, -all:spec*'   
       writer:
         console: true 
         test: (lv, dt, scope, args)->
-          if lv in ['log', 'verb'] and not elog.filter.enabled scope
-            return
-          cnt++
-          if cnt is 1 
-            expect args[0] 
-              .toBe 'info text'
-          if cnt is 3 
-            expect args[0]
-              .toBe 'warn last'
+          # if lv in ['log', 'verb'] and not elog.filter.enabled scope
+            # return
+          # cnt++
+          # if cnt is 1 
+          #   expect args[0] 
+          #     .toBe 'info text'
+          # if cnt is 3 
+          #   expect args[0]
+          #     .toBe 'warn last'
+          #   done()
+          if args[0] is 'print warn last'
             done()
+
 
     console.log 'pattern', elog.filter
     all = elog.scope 'all'
-
+    all.info 'disable pattern 2'
     spec = all.scope 'spec'
-    spec.log 'disable pattern 2'  # not print
+    spec.log 'not print'  # not print
     sub = spec.scope 'sub' 
-    sub.info 'info text'         # print info
-    sub.log 'log sub'       # not
+    sub.info 'print'         # print info
+    sub.log 'not print'       # not
     sub2 = spec.scope 'sub2'
-    sub2.warn 'crash?'      # print warn
-    sub2.log 'log 2'        # not
+    sub2.warn 'print'      # print warn
+    sub2.log 'not print'        # not
 
-    all.warn 'warn last'    # print 
+    all.warn 'print warn last'    # print 
 
   it 'Error ', (done)->    
     cnt = 0
@@ -127,23 +131,25 @@ describe 'spec', ()->
     sub.warn 'crash?'
   
   it 'disable log ', (done)->    
-    cnt = 0
+    # cnt = 0
     elog.configure
-      consoleFilter: '*, -spec:*'   
+      console:
+        filter: '*, -spec:*'   
       writer:
         console: true 
         test: (lv, dt, scope, args)->
-          if lv in ['log', 'verb'] and not elog.filter.enabled scope
-            return
-          cnt++
-          if cnt is 1 
-            expect args[0] 
-              .toBe 'disable log'
-          else if cnt is 4             
-            expect lv 
-              .toBe 'warn'
-            expect args[0]
-              .toBe 'warn last'
+          # if lv in ['log', 'verb'] and not elog.filter.enabled scope
+            # return
+          # cnt++
+          # if cnt is 1 
+          #   expect args[0] 
+          #     .toBe 'disable log'
+          # else if cnt is 4             
+          #   expect lv 
+          #     .toBe 'warn'
+          #   expect args[0]
+          #     .toBe 'warn last'
+          if args[0] is 'warn last'
             done()
 
     spec = elog.scope 'spec'
@@ -167,20 +173,21 @@ describe 'spec', ()->
     setTimeout (()-> done()), 1000
 
   # return
-  it 'file log ', (done)->    
+  it 'file log', (done)->    
     cnt = 0
     elog.configure
-      consoleFilter: '-*'  
+      # console:
+      #   filter: '-*'  
       file:
         prefix: './test/log-'
       writer:
         file: true
 
-    spec = elog.scope 'spec'
-    spec.log 'file log', Math.random()
+    spec = elog.scope 'file-log'
+    spec.info 'file log', Math.random()
     sub = spec.scope 'sub'
     sub.info 'text'
-    sub = spec.scope 'sub'
+    sub = spec.scope 'sub2'
     sub.warn 'crash?'
 
     spec.warn 'warn with data', {a: 'value', b:123123}
@@ -282,25 +289,29 @@ JavaScript calls the toString method automatically when a
     sub = spec.scope 'sub'
     sub.warn 'crash?'
  
-  it 'file log - long ', (done)->    
+  it 'long-file-log', (done)->    
     cnt = 0
     conf = 
       file:
         truncate: true
         prefix: './test/log-'
-      consoleFilter: 'long4, long9'   
+      console:
+        filter: '*long4*'
+        limitAttachLine: 3   
       writer:
         console: true  
         file: true
 
     elog.configure conf
-    logConf = elog.scope 'conf'
+    logConf = elog.scope 'long-file-log'
     logConf.info 'json', JSON.stringify conf, null, 4
 
     for i in [0...10]
 
-      spec = elog.scope 'long' + i, true
-      spec.log 'file log - long', Array(60).join '='
+      spec = logConf.scope 'long' + i, true
+      spec.log Array(80).join '='
+      spec.log 'print only long4'
+      spec.log 'file log - long'
       sub = spec.scope 'sub', true
       sub.info 'text'
       sub = spec.scope 'sub'

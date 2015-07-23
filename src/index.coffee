@@ -22,66 +22,67 @@ fixStr = (str, emptyStr)->
   t = str + emptyStr
   return t[0...emptyStr.length]
 
+createFilter = ()->
+  filter =
+    cached_enabled: {}
+    skips: []
+    names: []
+    clear: ()->
+      filter.cached_enabled = {}
+      filter.skips = []
+      filter.names = []
 
-filter =
-  cached_enabled: {}
-  skips: []
-  names: []
-  clear: ()->
-    filter.cached_enabled = {}
-    filter.skips = []
-    filter.names = []
-
-  build: (namespaces)-> 
-    split = (namespaces or '').split(/[\s,]+/)
-    len = split.length
-    i = 0
-    while i < len
-      if !split[i]
-        i++
-        continue
-      # ignore empty strings 
-      namespace = split[i].replace(/\*/g, '.*?')
-      # namespace = split[i]
-
-      pat = filter.names 
-      if namespace[0] == '-'
-        pat = filter.skips
-        namespace = namespace.substr(1)
-
-      pat.push new RegExp '^' + namespace + '$'
-
-      # if namespace.indexOf('*') >= 0 
-      #   namespace = namespace.replace(/\*/g, '.*?')
-      #   pat.push new RegExp '^' + namespace + '$'
-      # else 
-      #   pat.push new RegExp '^' + namespace + '$'
-      #   pat.push new RegExp '^' + namespace + ':.*?$'
-      i++
-
-    # console.log 'filter', filter
-  enabled : (name) ->
-    _enabled = (name)->
-      i = undefined
-      len = undefined
+    build: (namespaces)-> 
+      split = (namespaces or '').split(/[\s,]+/)
+      len = split.length
       i = 0
-      len = filter.skips.length
       while i < len
-        if filter.skips[i].test(name)
-          return false
-        i++
-      i = 0
-      len = filter.names.length
-      while i < len
-        if filter.names[i].test(name)
-          return true
-        i++
-      false
+        if !split[i]
+          i++
+          continue
+        # ignore empty strings 
+        namespace = split[i].replace(/\*/g, '.*?')
+        # namespace = split[i]
 
-    if filter.cached_enabled[name] is undefined
-      filter.cached_enabled[name] = _enabled name
-    return filter.cached_enabled[name]
+        pat = filter.names 
+        if namespace[0] == '-'
+          pat = filter.skips
+          namespace = namespace.substr(1)
 
+        pat.push new RegExp '^' + namespace + '$'
+
+        # if namespace.indexOf('*') >= 0 
+        #   namespace = namespace.replace(/\*/g, '.*?')
+        #   pat.push new RegExp '^' + namespace + '$'
+        # else 
+        #   pat.push new RegExp '^' + namespace + '$'
+        #   pat.push new RegExp '^' + namespace + ':.*?$'
+        i++
+
+      # console.log 'filter', filter
+    enabled : (name) ->
+      _enabled = (name)->
+        i = undefined
+        len = undefined
+        i = 0
+        len = filter.skips.length
+        while i < len
+          if filter.skips[i].test(name)
+            return false
+          i++
+        i = 0
+        len = filter.names.length
+        while i < len
+          if filter.names[i].test(name)
+            return true
+          i++
+        false
+
+      if filter.cached_enabled[name] is undefined
+        filter.cached_enabled[name] = _enabled name
+      debug 'check enabled', name, filter.cached_enabled[name]
+      return filter.cached_enabled[name]
+  return filter
 
 
 
@@ -156,21 +157,20 @@ EpicLog.build = ()->
   conf = EpicLog.conf
   # Clear
   emitter.removeAllListeners()
-  filter.clear()
+  # filter.clear()
   # Set Writer
   for own k, v of conf.writer
     if v is false
       continue
     if v is true and EpicLog.writerFactory[k]
       # console.log 'set writer', k
-      EpicLog.setWriter EpicLog.writerFactory[k]()
+      EpicLog.setWriter EpicLog.writerFactory[k] conf[k]
     else 
       EpicLog.setWriter v 
 
-  #set scope filter
-  conf.consoleFilter = conf.consoleFilter || '*'
-  filter.build conf.consoleFilter
-  EpicLog.filter = filter
+  # conf.consoleFilter = conf.consoleFilter || '*'
+  # filter.build conf.consoleFilter
+  # EpicLog.filter = filter
 
 EpicLog.setWriter = (writer)->
   emitter.on 'write', writer
@@ -218,6 +218,13 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
         str = a.toString(2) 
       else
         str = util.inspect a, showHidden: true, depth: 10
+
+      if opt.limitAttachLine 
+        lines = str.split("\n")
+        if lines.length > opt.limitAttachLine
+          str = lines[0...opt.limitAttachLine].join("\n") + "\n------  MORE  ------"
+
+
       attach += "\n$#{aInx}:= " + str
       aInx++
 
@@ -248,12 +255,12 @@ createFileWriter = ()->
     lock = true
 
 
-    console.log 'truncating', EpicLog.conf.file.truncate
+    # console.log 'truncating', EpicLog.conf.file.truncate
     if EpicLog.conf.file.truncate is true and truncated is false
       fileYMD = yyyymmdd new Date()
       filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
       if fs.existsSync filename
-        console.log 'truncating', filename
+        # console.log 'truncating', filename
         fs.truncateSync filename, 0
       truncated = true
 
@@ -295,8 +302,15 @@ createFileWriter = ()->
 
   return _writer
 
-createConsoleWriter = ()->
+createConsoleWriter = (conf = {})->
   colors = require 'colors/safe'
+
+  conf.filter = conf.filter || '*'
+  filter = createFilter()
+  filter.build conf.filter
+  debug 'filter', filter
+  # EpicLog.filter = filter
+
 
   # colArr = 'black,red,green,yellow,blue,magenta,cyan,white'.split ','
   colArr = 'cyan,red,green,yellow,magenta'.split ','
@@ -334,10 +348,12 @@ createConsoleWriter = ()->
     if lv in ['log', 'verb'] and not filter.enabled scope
       return
 
-    console.log EpicLog.toText lv, dt, scope, args,
+    opt = 
       decoLv : _coloredLv
       decoScope: _coloredScope 
       decoErr: (str)-> colors.red colors.bold str 
+      limitAttachLine: EpicLog.conf?.console?.limitAttachLine or 5 
+    console.log EpicLog.toText lv, dt, scope, args, opt
   return _writer
 
 # EpicLog.createFileWriter = createFileWriter
