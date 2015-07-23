@@ -149,7 +149,7 @@ EpicLog = (scope)->
     using: (fnInScope)->
       fnInScope epic
 
-    mixAt: (obj)->
+    lig: (obj)->
       for own fnName, fn of epic
         obj[fnName] = fn
 

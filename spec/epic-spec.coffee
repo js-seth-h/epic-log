@@ -445,7 +445,7 @@ JavaScript calls the toString method automatically when a
       elog.warn 'done', 'scope shadowing'
 
 
-  it 'scope mixAt ', (done)->    
+  it 'scope lig', (done)->    
     cnt = 0
     elog.configure 
       writer: 
@@ -460,7 +460,7 @@ JavaScript calls the toString method automatically when a
     log  = elog.scope('spec')
 
     dummy = {}
-    log.mixAt dummy
+    log.lig dummy
     dummy.log 'test'
     dummy.warn 'crash?'
     dummy.scope("in").using (log)->
