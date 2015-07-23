@@ -152,7 +152,7 @@ EpicLog = (scope)->
     mixAt: (obj)->
       for own fnName, fn of epic
         obj[fnName] = fn
-        
+
   return epic
 
 EpicLog.fixStr = fixStr
@@ -344,19 +344,30 @@ createConsoleWriter = (conf = {})->
 
 
   # colArr = 'black,red,green,yellow,blue,magenta,cyan,white'.split ','
-  colArr = 'cyan,red,green,yellow,magenta'.split ','
+  colArr = 'red,green,yellow,magenta,cyan,white'.split ','
+  # colArr = 'cyan,red,green,yellow,magenta'.split ','
   colMap = {}
   inx = 0
   _coloredScope = (scope)->
-    # seed = scope.split(':')[0]
-    seed = scope
+    toks = scope.split(':')
 
-    if not colMap[seed]
-      colMap[seed] = colArr[inx]
-      inx++
-      inx = 0 if inx is colArr.length
+    coloredToks = toks.map (tok)->
+      if not colMap[tok]
+        colMap[tok] = colArr[inx]
+        inx++
+        inx = 0 if inx is colArr.length
+      return colors[colMap[tok]] colors.bold tok
     
-    return colors[colMap[seed]] colors.bold scope
+    return coloredToks.join ':'
+
+    # seed = scope
+
+    # if not colMap[seed]
+    #   colMap[seed] = colArr[inx]
+    #   inx++
+    #   inx = 0 if inx is colArr.length
+    
+    # return colors[colMap[seed]] colors.bold scope
     # console.log 'colored' , escape colored
     # return colored
 
