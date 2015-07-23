@@ -1,5 +1,5 @@
 events = require('events')
-
+debug = require('debug') 'epic-log'
 
 _isNumeric = (obj)->
     return !_isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
@@ -135,7 +135,7 @@ EpicLog.scope = (scope, useId)->
   return _createScope null, scope, useId
 
 EpicLog.configure = (conf)->
-
+  debug 'configure'
   if conf.filepath
     # EpicLog.conf = require conf.filepath   
     fs = require 'fs'
@@ -152,6 +152,7 @@ EpicLog.configure = (conf)->
 
 
 EpicLog.build = ()->
+  debug 'build'
   conf = EpicLog.conf
   # Clear
   emitter.removeAllListeners()
@@ -160,9 +161,9 @@ EpicLog.build = ()->
   for own k, v of conf.writer
     if v is false
       continue
-    if v is true and EpicLog.writer[k]
+    if v is true and EpicLog.writerFactory[k]
       # console.log 'set writer', k
-      EpicLog.setWriter EpicLog.writer[k]
+      EpicLog.setWriter EpicLog.writerFactory[k]()
     else 
       EpicLog.setWriter v 
 
@@ -183,11 +184,6 @@ EpicLog.write = (lv, scope, args)->
   emitter.emit 'write', lv, localISOTime, scope, args
 
 
-yyyymmdd = (dt)->
-  yyyy = dt.getFullYear().toString();
-  mm = (dt.getMonth()+1).toString(); # getMonth() is zero-based
-  dd  = dt.getDate().toString();
-  return yyyy + (mm[1]?mm:"0"+mm[0]) + (dd[1]?dd:"0"+dd[0]); # padding
 
 EpicLog.toText = (lv, dt, scope, args, opt ={})->
   util = require 'util'  
@@ -205,7 +201,7 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
   aInx = 0
   # console.log 'to Text args', args
   for a in args
-    if _isString(a) or _isNumeric(a) 
+    if not _isObject(a) and not _isFunction(a) and not _isArray(a)
       body += " " + a 
     else if _isError a
       msg = a.toString()
@@ -219,9 +215,7 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
 
 
       if _isFunction a 
-        str = a.toString(2)
-      else if _isString a
-        str = a.toString()
+        str = a.toString(2) 
       else
         str = util.inspect a, showHidden: true, depth: 10
       attach += "\n$#{aInx}:= " + str
@@ -231,27 +225,49 @@ EpicLog.toText = (lv, dt, scope, args, opt ={})->
   body = body.split("\n").map((l)-> "     " + l).join("\n").trim()
   return header + body
 
+yyyymmdd = (dt)-> 
+  yyyy = dt.getFullYear().toString();
+  mm = (dt.getMonth()+1).toString(); # getMonth() is zero-based
+  dd  = dt.getDate().toString();
+  mm = "0" + mm if mm.length is 1
+  dd = "0" + dd if dd.length is 1
+  return yyyy + mm + dd
+
 createFileWriter = ()->
   fs = require 'fs'
+  debug 'createFileWriter'
   bufLine = []
   lock = false
+
+  truncated = false  
+
   _appendToFile = ()->
     return if lock 
     return if bufLine.length is 0
 
     lock = true
-    data = ''
 
+
+    console.log 'truncating', EpicLog.conf.file.truncate
+    if EpicLog.conf.file.truncate is true and truncated is false
+      fileYMD = yyyymmdd new Date()
+      filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
+      if fs.existsSync filename
+        console.log 'truncating', filename
+        fs.truncateSync filename, 0
+      truncated = true
+
+    data = ''
     fileYMD = null
 
     loop
       line = bufLine.shift()
       [lv, dt, scope, args] = line
 
-      yyyymmdd = dt.slice(0,10).replace /-/gi, ''
+      YMD = dt.slice(0,10).replace /-/gi, ''
       if fileYMD is null
-        fileYMD = yyyymmdd
-      else if fileYMD != yyyymmdd
+        fileYMD = YMD
+      else if fileYMD != YMD
         bufLine.unshift line
         break 
 
@@ -324,11 +340,12 @@ createConsoleWriter = ()->
       decoErr: (str)-> colors.red colors.bold str 
   return _writer
 
-EpicLog.createFileWriter = createFileWriter
-EpicLog.createConsoleWriter = createConsoleWriter
-EpicLog.writer =
-  console: createConsoleWriter() 
-  file: createFileWriter()
+# EpicLog.createFileWriter = createFileWriter
+# EpicLog.createConsoleWriter = createConsoleWriter
+
+EpicLog.writerFactory = 
+  console: createConsoleWriter
+  file: createFileWriter
 
 
 module.exports = exports = EpicLog

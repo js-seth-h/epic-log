@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/js-seth-h/epic-log",
   "dependencies": {
-    "colors": "^1.1.2"
+    "colors": "^1.1.2",
+    "debug": "^2.2.0"
   },
   "devDependencies": {
     "coffee-script": "^1.7.1"

@@ -12,27 +12,22 @@ describe 'spec', ()->
         console: true
         test: (lv, dt, scope, args)->
           cnt++
-          if cnt is 1 
-            expect lv 
-              .toBe 'log'
-          else if cnt is 2
-            expect scope
-              .toBe 'spec:sub'
-            expect lv 
-              .toBe 'info'
-            expect args[0]
-              .toBe 'text'
-          else             
-            expect lv 
-              .toBe 'warn'
-            done()
+          switch args[0]
+            when 'test'
+              expect lv 
+                .toEqual 'log'
+            when 'text with type'
+              expect args.length
+                .toEqual 5
+            when 'done'
+              done()
 
     spec = elog.scope 'spec'
     spec.log 'test'
+    sub = spec.scope 'sub2'
+    sub.info 'text with type', 1, true, false, 'string'
     sub = spec.scope 'sub'
-    sub.info 'text'
-    sub = spec.scope 'sub'
-    sub.warn 'crash?'
+    sub.warn 'done'
 
 
   it 'indent ramdom ', (done)->    
@@ -87,7 +82,7 @@ describe 'spec', ()->
     all = elog.scope 'all'
 
     spec = all.scope 'spec'
-    spec.log 'disable log'  # not print
+    spec.log 'disable pattern 2'  # not print
     sub = spec.scope 'sub' 
     sub.info 'info text'         # print info
     sub.log 'log sub'       # not
@@ -118,7 +113,7 @@ describe 'spec', ()->
             expect lv 
               .toBe 'info'
             expect args[0]
-              .toBe 'text'
+              .toBe 'text truncate?'
           else             
             expect lv 
               .toBe 'warn'
@@ -127,11 +122,10 @@ describe 'spec', ()->
     spec = elog.scope 'spec'
     spec.err new Error 'Fake Err'
     sub = spec.scope 'sub'
-    sub.info 'text'
+    sub.info 'text truncate?', Math.random()
     sub = spec.scope 'sub'
     sub.warn 'crash?'
- 
-  # return 
+  
   it 'disable log ', (done)->    
     cnt = 0
     elog.configure
@@ -166,11 +160,11 @@ describe 'spec', ()->
 
     elog.configure 
       file:
-        prefix: './test/log-'
-    writer = elog.createFileWriter()
+        prefix: './test/test-seperate-' 
+    writer = elog.writerFactory.file()
     writer 'info', '2015-07-01 10:10:10', 's', '1'
     writer 'info', '2015-07-02 10:10:10', 's', '2'
-    done()
+    setTimeout (()-> done()), 1000
 
   # return
   it 'file log ', (done)->    
@@ -183,7 +177,7 @@ describe 'spec', ()->
         file: true
 
     spec = elog.scope 'spec'
-    spec.log 'disable log'
+    spec.log 'file log', Math.random()
     sub = spec.scope 'sub'
     sub.info 'text'
     sub = spec.scope 'sub'
@@ -292,6 +286,7 @@ JavaScript calls the toString method automatically when a
     cnt = 0
     conf = 
       file:
+        truncate: true
         prefix: './test/log-'
       consoleFilter: 'long4, long9'   
       writer:
@@ -378,7 +373,11 @@ JavaScript calls the toString method automatically when a
   it 'scope shadowing ', (done)->    
     cnt = 0
     elog.configure
+      file: 
+        prefix: './test/log-' 
+
       writer:
+        file: true
         console: true
         test: (lv, dt, scope, args)-> 
           if args[0] is 'test'
@@ -390,5 +389,5 @@ JavaScript calls the toString method automatically when a
     elog.scope('spec').using (elog)->
       elog.log 'test'
       elog.warn 'crash?'
-      elog.warn 'done'
+      elog.warn 'done', 'scope shadowing'
 
