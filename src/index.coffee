@@ -15,12 +15,12 @@ _isError = (obj)->
   # _toString.call(obj) is "[object Error]" # Error을 상속받으면 부정확.
   return obj instanceof Error
 
-LV_ERR = 'err'
+LV_FATAL = 'fatal'
 LV_WARN = 'warn'
 LV_INFO = 'info'
 LV_VERB = 'verb'
 LV_LOG  = 'log' 
-LV_DEBUG = 'dbg'
+LV_DEBUG = 'debug'
 
 
 emitter = new events.EventEmitter()
@@ -132,7 +132,7 @@ EpicLog = (scope)->
     return _fn
 
   epic = 
-    err : _createLoggingFn LV_ERR
+    fatal : _createLoggingFn LV_FATAL
     warn: _createLoggingFn LV_WARN
     info: _createLoggingFn LV_INFO
     verb: _createLoggingFn LV_VERB
@@ -217,15 +217,16 @@ EpicLog.toText = (lv, dt, scope, args, opt = {})->
   util = require 'util'  
   # lv = fixStr lv, '    '
 
-  padLen = 4 - lv.length
-  pad = '      '[0...padLen]
+  padLen = 5 - lv.length
+  pad = '       '[0...padLen]
   
+  opt.decoDate = opt.decoDate or (t)-> t
   opt.decoLv = opt.decoLv or (t)-> t
   opt.decoScope = opt.decoScope or (t)-> t
   opt.decoBody = opt.decoBody or (t)-> t
   opt.inspectColor =  opt.inspectColor or false
 
-  header = "[#{opt.decoLv lv}]#{pad} [#{dt}] [#{opt.decoScope scope}] "
+  header = "[#{opt.decoDate dt}] #{pad}[#{opt.decoLv lv}] [#{opt.decoScope scope}] "
   body = ''
   attach = ''
   aInx = 0
@@ -251,7 +252,7 @@ EpicLog.toText = (lv, dt, scope, args, opt = {})->
       else
         str = util.inspect a, showHidden: false, depth: 10, colors: opt.inspectColor
 
-      if lv isnt 'dbg' and opt.limitAttachLine 
+      if lv isnt LV_DEBUG and opt.limitAttachLine 
         lines = str.split("\n")
         if lines.length > opt.limitAttachLine
           ll = lines.length
@@ -379,12 +380,12 @@ createConsoleWriter = (conf = {})->
 
   _coloredLv = (lv)-> 
     cMap =
-      err : 'red'  
+      fatal : 'red'  
       warn: 'yellow' 
       info: 'cyan' 
       verb: 'grey' 
       log : 'grey'  
-      dbg : 'white'
+      debug : 'white'
     c = cMap[lv.trim()]
     # console.log '_coloredLv', lv, c 
     return colors[c] colors.bold lv
@@ -395,6 +396,7 @@ createConsoleWriter = (conf = {})->
       return
 
     opt = 
+      decoDate: (dt_str)-> dt_str[11...] 
       decoLv : _coloredLv
       decoScope: _coloredScope 
       decoErr: (str)-> colors.red colors.bold str 

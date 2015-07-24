@@ -116,7 +116,7 @@ describe 'spec', ()->
           cnt++
           if cnt is 1 
             expect lv 
-              .toBe 'err'
+              .toBe 'fatal'
           else if cnt is 2
             expect scope
               .toBe 'spec:sub'
@@ -130,7 +130,7 @@ describe 'spec', ()->
             done()
 
     spec = elog.scope 'spec'
-    spec.err new Error 'Fake Err'
+    spec.fatal new Error 'Fake Err'
     sub = spec.scope 'sub'
     sub.info 'text truncate?', Math.random()
     sub = spec.scope 'sub'
@@ -150,7 +150,7 @@ describe 'spec', ()->
           cnt++
           if cnt is 1 
             expect lv 
-              .toBe 'err'
+              .toBe 'warn'
           else if cnt is 2
             expect scope
               .toBe 'spec:sub'
@@ -166,7 +166,7 @@ describe 'spec', ()->
     spec = elog.scope 'spec'
     e =  new Error 'Fake Err'
     e.hint = {name: 'ficent hint mock-up'}
-    spec.err e
+    spec.warn e
     sub = spec.scope 'sub'
     sub.info 'text truncate?', Math.random()
     sub = spec.scope 'sub'
@@ -461,8 +461,9 @@ JavaScript calls the toString method automatically when a
 
     dummy = {}
     log.lig dummy
-    dummy.log 'test'
+    dummy.log 'test', new Error 'Test'
     dummy.warn 'crash?'
+    dummy.fatal "\n",'   indented crash?', "\n",'   indented crash?', "\n",'indented crash?'
     dummy.scope("in").using (log)->
       log.log 'dev-dummy' 
     dummy.warn 'done', 'scope mixAt'
