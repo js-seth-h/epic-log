@@ -283,6 +283,10 @@ createFileWriter = ()->
 
   truncated = false  
 
+  unless EpicLog.conf.file.filename
+    EpicLog.conf.file.filename = (fileYMD)->
+      EpicLog.conf.file.prefix + fileYMD + ".txt"
+      
   _appendToFile = ()->
     return if lock 
     return if bufLine.length is 0
@@ -293,7 +297,8 @@ createFileWriter = ()->
     # console.log 'truncating', EpicLog.conf.file.truncate
     if EpicLog.conf.file.truncate is true and truncated is false
       fileYMD = yyyymmdd new Date()
-      filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
+      filename = EpicLog.conf.file.filename(fileYMD)
+      # filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
       if fs.existsSync filename
         # console.log 'truncating', filename
         fs.truncateSync filename, 0
@@ -322,7 +327,8 @@ createFileWriter = ()->
 
 
     # console.log 'appendFile', 'go'
-    filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
+    filename = EpicLog.conf.file.filename(fileYMD)
+    # filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
     fs.appendFile filename, data, (err)->
       # console.log 'appendFile', err
       lock = false

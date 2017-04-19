@@ -106,6 +106,8 @@ describe 'spec', ()->
     cnt = 0
     elog.configure
       file:
+        filename: (ymd)->
+          "./test/#{ymd}-test-#{process.pid}.txt"
         prefix: './test/err-'
       writer:
         file: true
