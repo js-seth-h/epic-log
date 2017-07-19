@@ -4,6 +4,8 @@ moment = require 'moment'
 util = require 'util'
 fs = require 'fs'
 
+
+debug = (args...)-> console.log args...
 _isNumeric = (obj)->
     return !_isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 _isString = (obj)->
@@ -72,7 +74,7 @@ createFileWriter = (conf = {})->
 
         [section, time, log_args] = bufLogs[0]
 
-        ymd = time.format("YYMMDD")
+        ymd = time.format("YYYYMMDD")
         dt = time.format("hh:mm:ss.SSSS") 
         file_ymd = file_ymd or ymd 
 
@@ -107,7 +109,7 @@ createFileWriter = (conf = {})->
           data_to_fs += appendix + "\n" 
 
       filepath = _getFilepath file_ymd 
-      console.log 'fs.appendFile', filepath, data_to_fs
+      # debug 'fs.appendFile', filepath, data_to_fs
       fs.appendFile filepath, data_to_fs, (err)-> 
         lock = false
         _appendToFile()
