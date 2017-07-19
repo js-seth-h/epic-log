@@ -52,6 +52,8 @@ describe 'spec', ()->
       ]
       writer: 
         console : true
+        file: 
+          filepath: "./log/{{YYYYMMDD}}-SECTION.txt"
         test: (lv, dt, args)->
           # cnt++
           # switch args[0]
@@ -65,7 +67,7 @@ describe 'spec', ()->
           #     done()
 
     f = (x)-> console.log x
-    elog 'ALPHA', new Date
+    elog 'ALPHA', 'print date', new Date
     elog 'ALPHA', f
     elog 'ALPHA', new Error 'JUST'
     done()
