@@ -1,5 +1,5 @@
 process.env.DEBUG = "*"
-elog = require '../src'
+elog = require '../src/index.0'
 
 # debug = require('debug')('spec')
 

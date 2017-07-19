@@ -1,6 +1,6 @@
 {
   "name": "epic-log",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "log system",
   "main": "lib",
   "scripts": {
@@ -30,8 +30,10 @@
   },
   "homepage": "https://github.com/js-seth-h/epic-log",
   "dependencies": {
+    "chalk": "^2.0.1",
     "colors": "^1.1.2",
-    "debug": "^2.2.0"
+    "debug": "^2.2.0",
+    "moment": "^2.18.1"
   },
   "devDependencies": {
     "coffee-script": "^1.7.1"
