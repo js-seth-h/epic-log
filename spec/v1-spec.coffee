@@ -53,7 +53,7 @@ describe 'spec', ()->
       writer: 
         console : true
         file: 
-          filepath: "./log/{{YYYYMMDD}}-SECTION.txt"
+          filepath: "./log/{{YYYYMMDD}}-{{SECTION}}.txt"
         test: (lv, dt, args)->
           # cnt++
           # switch args[0]
@@ -70,6 +70,7 @@ describe 'spec', ()->
     elog 'ALPHA', 'print date', new Date
     elog 'ALPHA', f
     elog 'ALPHA', new Error 'JUST'
+    elog 'BETA', 'this is beta', 'ver', 1
     done()
 
 

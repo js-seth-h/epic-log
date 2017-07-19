@@ -49,75 +49,81 @@ createFileWriter = (conf = {})->
 
   # debug = require('debug') 'createFileWriter'
 
-  truncated = false  
-  lock = false 
-  bufLogs = []
+  section_writers = {}
 
-  _getFilepath = (file_ymd)-> 
+  createSectionWriter = (section)->
+    truncated = false  
+    lock = false 
+    bufLogs = []
 
-    name = conf.filepath.replace(/\{\{YYYYMMDD\}\}/g, file_ymd) 
-    return name
+    _getFilepath = (file_ymd)->  
+      name = conf.filepath
+      name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd) 
+      name = name.replace(/\{\{SECTION\}\}/g, section) 
+      return name
 
-  _appendToFile = ()->
-    return if lock 
-    return if bufLogs.length is 0 
-    lock = true
+    _appendToFile = ()->
+      return if lock 
+      return if bufLogs.length is 0 
+      lock = true 
+      data_to_fs = ''
+      file_ymd = null
+      loop 
+        break if bufLogs.length is 0 
 
+        [section, time, log_args] = bufLogs[0]
 
-    data_to_fs = ''
-    file_ymd = null
-    loop 
-      break if bufLogs.length is 0 
+        ymd = time.format("YYMMDD")
+        dt = time.format("hh:mm:ss.SSSS") 
+        file_ymd = file_ymd or ymd 
 
-      [section, time, log_args] = bufLogs[0]
+        if file_ymd isnt ymd
+          break # 추출한 것까지 저장하고 다음 파일로감
+        bufLogs.shift()
 
-      ymd = time.format("YYMMDD")
-      dt = time.format("hh:mm:ss.SSSS") 
-      file_ymd = file_ymd or ymd 
-
-      if file_ymd isnt ymd
-        break # 추출한 것까지 저장하고 다음 파일로감
-      bufLogs.shift()
-
-      line = []
-      attach = [] 
-      line.push "[#{dt}]"
-      # line.push section 
-      for val in log_args
-        if not ('object' is typeof val ) and not ('function' is typeof val )
-          line.push val 
-        else if _isDate val
-          line.push val.toISOString()
-        else
-          attach_inx = attach.length
-          line.push "$#{attach_inx}" 
-          if _isError val 
-            attach_data = val.stack
-            attach_data = attach_data
-          else if _isFunction val 
-            attach_data = val.toString(2) 
-            attach_data = attach_data
+        line = []
+        attach = [] 
+        line.push "[#{dt}]"
+        # line.push section 
+        for val in log_args
+          if not ('object' is typeof val ) and not ('function' is typeof val )
+            line.push val 
+          else if _isDate val
+            line.push val.toISOString()
           else
-            attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
-          attach.push "$#{attach_inx} := " + attach_data 
-      text = line.join ' '
-      data_to_fs += text + "\n" 
-      for appendix in attach
-        data_to_fs += appendix + "\n" 
+            attach_inx = attach.length
+            line.push "$#{attach_inx}" 
+            if _isError val 
+              attach_data = val.stack
+              attach_data = attach_data
+            else if _isFunction val 
+              attach_data = val.toString(2) 
+              attach_data = attach_data
+            else
+              attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
+            attach.push "$#{attach_inx} := " + attach_data 
+        text = line.join ' '
+        data_to_fs += text + "\n" 
+        for appendix in attach
+          data_to_fs += appendix + "\n" 
 
-    filepath = _getFilepath file_ymd 
-    console.log 'fs.appendFile', filepath, data_to_fs
-    fs.appendFile filepath, data_to_fs, (err)-> 
-      lock = false
+      filepath = _getFilepath file_ymd 
+      console.log 'fs.appendFile', filepath, data_to_fs
+      fs.appendFile filepath, data_to_fs, (err)-> 
+        lock = false
+        _appendToFile()
+
+    return _sectionWriter = (time, log_args)->
+      bufLogs.push [section, time, log_args]
       _appendToFile()
 
-  _writer = (section, time,  log_args)->
-    # date = new Date(dt)  
-    # yymmdd = dt.slice(0,10).replace '-', ''
-    # console.log 'called FileWriter'
-    bufLogs.push [section, time, log_args] 
-    _appendToFile()
 
+  _writer = (section, time,  log_args)->
+    unless section_writers[section]
+      section_writers[section] = createSectionWriter section
+
+    section_writers[section] time, log_args 
+    # _appendToFile()
   return _writer
 
 
