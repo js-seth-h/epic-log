@@ -1,4 +1,4 @@
-process.env.DEBUG = "*"
+process.env.DEBUG = "*,-ficent"
 elog = require '../src'
 
 describe 'spec', ()->    
@@ -7,29 +7,18 @@ describe 'spec', ()->
       sections : [
           name: 'ALPHA'
           min_lv: 5
-          enable: off
+          enable: on
           log_life: 7
         , 
           name: 'RELEASE'
           min_lv: 9
-          enable: off
+          enable: on
           log_life: 7 # days 
           # post_task:
       ]
       writer: 
         console : true
-        test: (lv, dt, args)->
-          # cnt++
-          # switch args[0]
-          #   when 'test'
-          #     expect lv 
-          #       .toEqual 'log'
-          #   when 'text with type'
-          #     expect args.length
-          #       .toEqual 9
-          #   when 'done'
-          #     done()
-
+        test: (lv, dt, args)->  
     elog 'ALPHA', 'print test'
     done()
 
@@ -41,30 +30,21 @@ describe 'spec', ()->
       sections : [
           name: 'ALPHA'
           min_lv: 5
-          enable: off
+          enable: on
           log_life: 7
         , 
           name: 'RELEASE'
           min_lv: 9
-          enable: off
+          enable: on
           log_life: 7 # days 
           # post_task:
       ]
       writer: 
         console : true
         file: 
-          filepath: "./log/{{YYYYMMDD}}-{{SECTION}}.txt"
-        test: (lv, dt, args)->
-          # cnt++
-          # switch args[0]
-          #   when 'test'
-          #     expect lv 
-          #       .toEqual 'log'
-          #   when 'text with type'
-          #     expect args.length
-          #       .toEqual 9
-          #   when 'done'
-          #     done()
+          dir: './log'
+          postfix: ".txt"
+          # filepath: "./log/{{YYYYMMDD}}-{{SECTION}}.txt" 
 
     f = (x)-> console.log x
     elog 'ALPHA', 'print date', new Date
@@ -72,6 +52,35 @@ describe 'spec', ()->
     elog 'ALPHA', new Error 'JUST'
     elog 'BETA', 'this is beta', 'ver', 1
     done()
+
+
+  
+
+  it 'delete ', (done)->    
+    elog.configure
+      sections : [
+          name: 'ALPHA'
+          min_lv: 5
+          enable: on
+          log_life: 1
+        , 
+          name: 'BETA'
+          min_lv: 9
+          enable: on 
+          log_life: 0
+      ]
+      writer: 
+        console : true
+        file: 
+          dir: './log'
+          postfix: ".txt"
+
+    f = (x)-> console.log x 
+    elog 'ALPHA', "delete target"
+
+    elog.deleteDead()
+    process.nextTick ()->
+      done()
 
 
 

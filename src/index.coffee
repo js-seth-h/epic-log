@@ -3,9 +3,10 @@ moment = require 'moment'
 # _ = require 'lodash'
 util = require 'util'
 fs = require 'fs'
+ficent = require 'ficent'
+glob = require 'glob'
+path = require 'path'
 
-
-debug = (args...)-> console.log args...
 _isNumeric = (obj)->
     return !_isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 _isString = (obj)->
@@ -24,27 +25,42 @@ _isError = (obj)->
 
 emitter = new events.EventEmitter()
 
-EpicLog = (section, args... )-> 
+debug = (args...)-> 
+  # console.log args...
 
-  now = moment()
-  # tzoffset = now.getTimezoneOffset() * 60000; #offset in milliseconds
-  # localISOTime = (new Date(now.getTime() - tzoffset)).toISOString().slice(0,-1).replace 'T', ' ';
-
+conf = {}
+EpicLog = (section, args... )->  
+  now = moment() 
   emitter.emit 'write', section, now, args
 
 
-EpicLog.configure = (conf)-> 
-  # Clear
-  emitter.removeAllListeners()
-  for own k, v of conf.writer
-    if v is false
-      continue
-    else 
-      if EpicLog.writerFactory[k]
-        EpicLog.setWriter EpicLog.writerFactory[k] v
+EpicLog.configure = (new_conf)-> 
+  # Clear 
+  emitter.removeAllListeners() 
+  conf = new_conf
+  EpicLog.Writers = {}
+  for own writer_id, v of conf.writer
+    continue if v is false
+    continue unless  EpicLog.writerFactory[writer_id]
+    EpicLog.setWriter writer_id, v
 
-EpicLog.setWriter = (writer)->
-  emitter.on 'write', writer
+
+EpicLog.setWriter = (writer_id, writer_conf)->
+  writer_conf = {} if writer_conf is true 
+  writer = EpicLog.writerFactory[writer_id] writer_conf
+
+  emitter.on 'write', writer._write
+  emitter.on 'dead', writer._dead
+  EpicLog.Writers[writer_id] = writer
+
+
+EpicLog.deleteDead = ()->
+  for section in conf.sections 
+    mmt_dead = moment().add(-section.log_life, 'days').startOf('day')
+    debug 'emit desc', section.name, mmt_dead
+    emitter.emit 'dead', section.name, mmt_dead
+
+
  
 createFileWriter = (conf = {})->
 
@@ -58,10 +74,45 @@ createFileWriter = (conf = {})->
     bufLogs = []
 
     _getFilepath = (file_ymd)->  
-      name = conf.filepath
-      name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd) 
-      name = name.replace(/\{\{SECTION\}\}/g, section) 
-      return name
+      path.join conf.dir, "#{file_ymd}-#{section}" + conf.postfix
+      # name = conf.filepath
+      # name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd) 
+      # name = name.replace(/\{\{SECTION\}\}/g, section) 
+      # return name
+    _getFilePattern = ()->  
+      path.join conf.dir, "*-#{section}" + conf.postfix
+      # name = conf.filepath
+      # name = name.replace(/\{\{.+?\}\}/g, '*')  
+      # return name
+
+    _printFormat = (dt, log_args)->
+      line = []
+      attach = [] 
+      line.push "[#{dt}]"
+      # line.push section 
+      for val in log_args
+        if not ('object' is typeof val ) and not ('function' is typeof val )
+          line.push val 
+        else if _isDate val
+          line.push val.toISOString()
+        else
+          attach_inx = attach.length
+          line.push "$#{attach_inx}" 
+          if _isError val 
+            attach_data = val.stack
+            attach_data = attach_data
+          else if _isFunction val 
+            attach_data = val.toString(2) 
+            attach_data = attach_data
+          else
+            attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
+          attach.push "$#{attach_inx} := " + attach_data 
+      text = line.join ' '
+      
+      fmt_txt = text + "\n" 
+      for appendix in attach
+        fmt_txt += appendix + "\n" 
+      return fmt_txt
 
     _appendToFile = ()->
       return if lock 
@@ -82,31 +133,7 @@ createFileWriter = (conf = {})->
           break # 추출한 것까지 저장하고 다음 파일로감
         bufLogs.shift()
 
-        line = []
-        attach = [] 
-        line.push "[#{dt}]"
-        # line.push section 
-        for val in log_args
-          if not ('object' is typeof val ) and not ('function' is typeof val )
-            line.push val 
-          else if _isDate val
-            line.push val.toISOString()
-          else
-            attach_inx = attach.length
-            line.push "$#{attach_inx}" 
-            if _isError val 
-              attach_data = val.stack
-              attach_data = attach_data
-            else if _isFunction val 
-              attach_data = val.toString(2) 
-              attach_data = attach_data
-            else
-              attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
-            attach.push "$#{attach_inx} := " + attach_data 
-        text = line.join ' '
-        data_to_fs += text + "\n" 
-        for appendix in attach
-          data_to_fs += appendix + "\n" 
+        data_to_fs += _printFormat dt, log_args 
 
       filepath = _getFilepath file_ymd 
       # debug 'fs.appendFile', filepath, data_to_fs
@@ -114,24 +141,60 @@ createFileWriter = (conf = {})->
         lock = false
         _appendToFile()
 
-    return _sectionWriter = (time, log_args)->
-      bufLogs.push [section, time, log_args]
-      _appendToFile()
+    _deleteFile = (section, dead_time)-> 
+      log_file_pattern = _getFilePattern()
+      debug 'log_file_pattern', log_file_pattern
+      (ficent [
+        (_toss)-> 
+          glob log_file_pattern, {nodir: true}, _toss.storeArgs 'files'
+        (_toss)->
+          {files} = _toss.vars()
+          debug 'log files', files 
+          
+          _delete_file = ficent [
+            (filepath, _toss)->
+              filename = path.basename filepath
+              toks = filename.split '-'
+              date = toks[0]
+              # log.debug 'date =', date
+              debug 'check del', filepath
+              if moment(date, 'YYYYMMDD').isBefore dead_time
+                debug 'delete file', filepath
+                fs.unlink filepath, _toss
+              else
+                _toss null
+          ]
+
+          args_list = files.map (f)-> [f]
+          # _toss null
+          ficent.ser(_delete_file) args_list, _toss
+      ]) (err)-> 
+        if err
+          console.error err
+          throw err
+    return sectionWriter =
+      _write: (time, log_args)->
+        bufLogs.push [section, time, log_args]
+        _appendToFile() 
+      _deleteFile: (time)-> _deleteFile time
+
+ 
+  return obj =
+    _write : (section, time,  log_args)->
+      unless section_writers[section]
+        section_writers[section] = createSectionWriter section 
+      section_writers[section]._write time, log_args 
+
+    _dead: (section, time)->
+      unless section_writers[section]
+        section_writers[section] = createSectionWriter section 
+      section_writers[section]._deleteFile time 
 
 
-  _writer = (section, time,  log_args)->
-    unless section_writers[section]
-      section_writers[section] = createSectionWriter section
-
-    section_writers[section] time, log_args 
-    # _appendToFile()
-  return _writer
  
 
 
-createConsoleWriter = (conf = {})->
-  if conf is true 
-    conf = {}
+createConsoleWriter = (conf = {})-> 
   chalk = require('chalk');  
 
 
@@ -176,7 +239,9 @@ createConsoleWriter = (conf = {})->
     for appendix in attach
       console.log appendix
  
-  return _writer
+  return obj =
+    _write : _writer
+    _dead: ()->
 
 EpicLog.writerFactory = 
   console: createConsoleWriter
@@ -188,7 +253,7 @@ module.exports = exports = EpicLog
 
 
 # TODO
-# 로그 레벨을 사용해서 on/off 
+# 로그 레벨을 사용해서 on/off .
 # 개별 항목을 사용한 on/off
 # 삭제 기능
 # (opt)후처리 호출
