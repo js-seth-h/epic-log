@@ -41,7 +41,6 @@ EpicLog.configure = (conf)->
       if EpicLog.writerFactory[k]
         EpicLog.setWriter EpicLog.writerFactory[k] v
 
-
 EpicLog.setWriter = (writer)->
   emitter.on 'write', writer
  
@@ -125,39 +124,7 @@ createFileWriter = (conf = {})->
     section_writers[section] time, log_args 
     # _appendToFile()
   return _writer
-
-
-
-      # if fileYMD is null
-      #   fileYMD = YMD
-      # else if fileYMD != YMD
-      #   bufLine.unshift line
-      #   break 
-
-
-      # text = EpicLog.toText lv, dt, scope, args 
-
-      # data += text + "\n"
-  
-
-    # console.log 'appendFile', 'go'
-
-###
-    # console.log 'truncating', EpicLog.conf.file.truncate
-    if conf.truncate is true and truncated is false
-      fileYMD = yyyymmdd new Date()
-      filename = EpicLog.conf.file.filename(fileYMD)
-      # filename = EpicLog.conf.file.prefix + fileYMD + ".txt"
-      if fs.existsSync filename
-        # console.log 'truncating', filename
-        fs.truncateSync filename, 0
-      truncated = true
-
-    data = ''
-    fileYMD = null
-
-###
-
+ 
 
 
 createConsoleWriter = (conf = {})->
@@ -187,36 +154,13 @@ createConsoleWriter = (conf = {})->
           attach_data = chalk.green attach_data
         else
           attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor
+        attach.push "$#{attach_inx}:= " + attach_data 
 
-          # msg = opt.decoErr msg if opt.decoErr
-          # stack = opt.decoErr stack if opt.decoErr
-          # attach_data += "\n$attach_inx:= \n" + stack  
-        
-        attach.push "$#{attach_inx}:= " + attach_data
-        # attach_data += "\n$#{attach_inx}:= " + str
-        # attach_inx++
-      # else
-      #   if _isFunction val 
-      #     str = val.toString(2) 
-      #   else
-      #     str = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor
-
-      #   # if lv isnt LV_DEBUG and opt.limitAttachLine 
-      #   #   lines = str.split("\n")
-      #   #   if lines.length > opt.limitAttachLine
-      #   #     ll = lines.length
-      #   #     str = lines[0...opt.limitAttachLine].join("\n") + "\n------  MORE (#{opt.limitAttachLine} of #{ll} lines)  ------"
-
-
-      #   attach_data += "\n$#{attach_inx}:= " + str
-      #   attach_inx++
-      # text.push val.toString()
     text = line.join ' '
     console.log text
     for appendix in attach
       console.log appendix
-
-    # fs.appendFile './log.txt', text
+ 
   return _writer
 
 EpicLog.writerFactory = 
