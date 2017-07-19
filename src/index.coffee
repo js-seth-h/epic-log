@@ -36,6 +36,9 @@ debug = (args...)->
 # OK 삭제 기능
 # (opt)후처리 호출
 
+로그 출력시 이를테면 JSON-ML로의 변환을 통해서 
+Color처리와 같은 것을 개입할 여지가 있게 하자
+
 lv 중요도
 lv 10 : 무조건 찍어야 하는 로그
 lv 0 : 
@@ -88,6 +91,7 @@ EpicLog.deleteDead = ()->
     debug 'emit desc', section.name, mmt_dead
     emitter.emit 'dead', section.name, mmt_dead
 
+ 
 
 
 class Scope 
@@ -264,7 +268,7 @@ createConsoleWriter = (conf = {})->
     clr = keyword_color_table[section]
     return chalk.bold[clr] section
 
-  _writer = (section, time,  log_args)->
+  _writer = (section, time, log_args)->
     # dt = time.format("YY-MM-DD hh:mm:ss.SSSS")
     dt = time.format("hh:mm:ss.SSSS")
     line = []
