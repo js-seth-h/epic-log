@@ -131,13 +131,26 @@ createConsoleWriter = (conf = {})->
   if conf is true 
     conf = {}
   chalk = require('chalk');  
+
+
+  color_candidates = "red,green,yellow,blue,magenta,cyan,redBright,greenBright,yellowBright,blueBright,magentaBright,cyanBright".split ','
+  next_candidate = 0
+  keyword_color_table = {}
+  colored = (section)->
+    unless keyword_color_table[section]
+      keyword_color_table[section] = color_candidates[next_candidate]
+      next_candidate++
+      next_candidate = 0 if next_candidate is color_candidates.length 
+    clr = keyword_color_table[section]
+    return chalk.bold[clr] section
+
   _writer = (section, time,  log_args)->
     # dt = time.format("YY-MM-DD hh:mm:ss.SSSS")
     dt = time.format("hh:mm:ss.SSSS")
     line = []
     attach = [] 
     line.push "[#{dt}]"
-    line.push chalk.bold.yellow(section) 
+    line.push colored(section) 
     for val in log_args
       if not ('object' is typeof val ) and not ('function' is typeof val )
         line.push val 
@@ -170,3 +183,10 @@ EpicLog.writerFactory =
 
 
 module.exports = exports = EpicLog
+
+
+# TODO
+# 로그 레벨을 사용해서 on/off 
+# 개별 항목을 사용한 on/off
+# 삭제 기능
+# (opt)후처리 호출
