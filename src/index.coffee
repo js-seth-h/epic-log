@@ -88,6 +88,32 @@ EpicLog.deleteDead = ()->
     debug 'emit desc', section.name, mmt_dead
     emitter.emit 'dead', section.name, mmt_dead
 
+
+
+class Scope 
+  ns: []
+  constructor: (args...) ->
+    @ns = args
+  sub: (sub_str = undefined)-> 
+    sub_str = @_randomCode(4) unless sub_str
+    return new Scope @ns..., sub_str
+
+  toString: ()->
+    str = @ns.join(':')
+    return "[#{str}]"
+  
+  _randomCode: (size)->
+    CODE_SPACE = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890'
+    result = ''
+    for inx in [0...size]
+      at = Math.floor CODE_SPACE.length * Math.random()
+      result += CODE_SPACE[at]
+    return result
+
+
+EpicLog.scope = (name)->
+  new Scope name
+
 #####################################################################
 # writer 코드
  
@@ -250,6 +276,10 @@ createConsoleWriter = (conf = {})->
         line.push val 
       else if _isDate val
         line.push val.toISOString()
+      else if _isString val
+        line.push val.toString()
+      else if val instanceof Scope
+        line.push val.toString()
       else
         attach_inx = attach.length
         line.push "$#{attach_inx}" 

@@ -18,6 +18,9 @@ describe 'spec', ()->
             .toEqual 'ALPHA'
           done()
     elog 'ALPHA', 'print test'
+    str = str = new String('print test as new String')
+    # console.log new String('print test')
+    elog 'ALPHA', str
     # done()
 
 
@@ -134,4 +137,26 @@ describe 'spec', ()->
 
 
 
+
+
+
+  it 'scope ', (done)->    
+    elog.configure
+      sections : [ 
+          name: 'LV5-scope'
+          level: 5
+          enable: on
+          log_life: 1 
+      ]
+      writer: 
+        console : true 
+        file: 
+          dir: './log'
+          postfix: ".txt"
+ 
+    scope = elog.scope 'test'
+    scope = scope.sub().sub('call')
+    elog 'LV5-scope', scope, "print" 
+    process.nextTick ()->
+      done()
 
