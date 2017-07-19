@@ -1,26 +1,24 @@
 process.env.DEBUG = "*,-ficent"
 elog = require '../src'
-
+debug = require('debug') 'spec'
 describe 'spec', ()->    
   it 'default ', (done)->    
     elog.configure
       sections : [
           name: 'ALPHA'
-          min_lv: 5
+          level: 5
           enable: on
-          log_life: 7
-        , 
-          name: 'RELEASE'
-          min_lv: 9
-          enable: on
-          log_life: 7 # days 
-          # post_task:
+          log_life: 7 
       ]
       writer: 
         console : true
-        test: (lv, dt, args)->  
+        test: (section, dt, log_args)->  
+          debug section
+          expect section
+            .toEqual 'ALPHA'
+          done()
     elog 'ALPHA', 'print test'
-    done()
+    # done()
 
 
 
@@ -29,12 +27,12 @@ describe 'spec', ()->
     elog.configure
       sections : [
           name: 'ALPHA'
-          min_lv: 5
+          level: 5
           enable: on
           log_life: 7
         , 
           name: 'RELEASE'
-          min_lv: 9
+          level: 5
           enable: on
           log_life: 7 # days 
           # post_task:
@@ -59,13 +57,13 @@ describe 'spec', ()->
   it 'delete ', (done)->    
     elog.configure
       sections : [
-          name: 'ALPHA'
-          min_lv: 5
+          name: 'DEL'
+          level: 5
           enable: on
           log_life: 1
         , 
           name: 'BETA'
-          min_lv: 9
+          level: 5
           enable: on 
           log_life: 0
       ]
@@ -76,9 +74,55 @@ describe 'spec', ()->
           postfix: ".txt"
 
     f = (x)-> console.log x 
-    elog 'ALPHA', "delete target"
+    elog 'DEL', "delete target"
 
     elog.deleteDead()
+    process.nextTick ()->
+      done()
+
+ 
+
+
+  it 'log LV ', (done)->    
+    elog.configure
+      sections : [
+          name: 'LV3'
+          level: 3
+          enable: on
+          log_life: 1
+        , 
+          name: 'LV5'
+          level: 5
+          enable: on
+          log_life: 1
+        , 
+          name: 'LV5-off'
+          level: 5
+          enable: off
+          log_life: 1
+        , 
+          name: 'LV9'
+          level: 9
+          enable: on 
+          log_life: 0
+      ]
+      writer: 
+        console : true
+        test: (section, dt, log_args)->  
+          # debug 'test', section
+          if section is 'LV3'
+            throw new Error "Lv Wrong"
+          if section is 'LV5-off'
+            throw new Error "Lv Wrong"
+        file: 
+          dir: './log'
+          postfix: ".txt"
+
+    elog 'LV3', "print"
+    elog 'LV5', "print"
+    elog 'LV5-off', "print"
+    elog 'LV9', "print"
+
     process.nextTick ()->
       done()
 

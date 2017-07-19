@@ -26,32 +26,59 @@ _isError = (obj)->
 emitter = new events.EventEmitter()
 
 debug = (args...)-> 
-  # console.log args...
+  # console.log args... 
 
+# TODO
+# 로그 레벨을 사용해서 on/off .
+# 개별 항목을 사용한 on/off
+# OK 삭제 기능
+# (opt)후처리 호출
+
+###
+lv 중요도
+lv 10 : 무조건 찍어야 하는 로그
+lv 0 : 
+###
 conf = {}
+section_map = {}
+CUT_LV = 5
 EpicLog = (section, args... )->  
   now = moment() 
+  return unless section_map[section]
+  sec = section_map[section]
+  return if sec.level < CUT_LV
+  return if not sec.enable is on
   emitter.emit 'write', section, now, args
 
 
+EpicLog.setLogLv = (new_lv)->
+  CUT_LV = new_lv
+ 
 EpicLog.configure = (new_conf)-> 
   # Clear 
   emitter.removeAllListeners() 
   conf = new_conf
-  EpicLog.Writers = {}
-  for own writer_id, v of conf.writer
-    continue if v is false
-    continue unless  EpicLog.writerFactory[writer_id]
+  EpicLog.Writers = {} 
+
+  for sec in conf.sections
+    section_map[sec.name] = sec
+
+  for own writer_id, v of conf.writer 
     EpicLog.setWriter writer_id, v
 
 
-EpicLog.setWriter = (writer_id, writer_conf)->
-  writer_conf = {} if writer_conf is true 
-  writer = EpicLog.writerFactory[writer_id] writer_conf
+EpicLog.setWriter = (writer_id, writer_conf)-> 
+  return if writer_conf is false
+  if EpicLog.writerFactory[writer_id]
+    writer_conf = {} if writer_conf is true 
+    writer = EpicLog.writerFactory[writer_id] writer_conf
 
-  emitter.on 'write', writer._write
-  emitter.on 'dead', writer._dead
-  EpicLog.Writers[writer_id] = writer
+    emitter.on 'write', writer._write
+    emitter.on 'dead', writer._dead
+    EpicLog.Writers[writer_id] = writer
+  else 
+    writer_fn = writer_conf
+    emitter.on 'write', writer_fn 
 
 
 EpicLog.deleteDead = ()->
@@ -251,9 +278,3 @@ EpicLog.writerFactory =
 
 module.exports = exports = EpicLog
 
-
-# TODO
-# 로그 레벨을 사용해서 on/off .
-# 개별 항목을 사용한 on/off
-# 삭제 기능
-# (opt)후처리 호출
