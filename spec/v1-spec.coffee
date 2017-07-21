@@ -26,7 +26,9 @@ describe 'spec', ()->
 
 
 
-  it 'for types ', (done)->    
+  it 'for types ', (done)->   
+
+  
     elog.configure
       sections : [
           name: 'TYPES'

@@ -113,19 +113,20 @@ ANOTATERS = [
       ref_data: util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
 ]
 
-EpicLog = (section, args... )->  
-  now = moment() 
-  return unless section_map[section]
-  sec = section_map[section]
-  return if sec.level < CUT_LV
-  return if not sec.enable is on
+EpicLog = (section, args... )->   
 
+  if CUT_LV isnt 0
+    return unless section_map[section]
+    sec = section_map[section]
+    return if sec.level < CUT_LV
+    return if not sec.enable is on
 
   log_args =  args.map (val)-> 
     for fmt, inx in ANOTATERS
       if fmt.test val
         return fmt.anotate val, inx 
 
+  now = moment() 
   emitter.emit 'write', section, now, log_args
 
 
