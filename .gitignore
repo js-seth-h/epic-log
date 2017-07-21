@@ -31,3 +31,4 @@ test/
 node_modules/
 
 log/
+lib/
