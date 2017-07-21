@@ -26,9 +26,8 @@ describe 'spec', ()->
 
 
 
-  it 'for types ', (done)->   
+  it 'for types ', (done)->    
 
-  
     elog.configure
       sections : [
           name: 'TYPES'
@@ -47,6 +46,8 @@ describe 'spec', ()->
     elog 'TYPES', '--------------------------------'
     elog 'TYPES', 'print date', new Date
     elog 'TYPES', f
+    elog 'TYPES', 'null', null
+    elog 'TYPES', 'undefined', undefined
     elog 'TYPES', new Error 'JUST'
     elog 'TYPES', 'this is beta', 'ver', 1
     done()

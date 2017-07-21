@@ -97,11 +97,11 @@ ANOTATERS = [
       ref_data: val.toString(2) 
 ,
   # LITERALs 
-  test: (val)-> not ('object' is typeof val ) and not ('function' is typeof val )
+  test: (val)-> ( val is null or val is undefined ) or not ('object' is typeof val ) and not ('function' is typeof val )
   anotate: (val)-> 
     return item =
       type: 'literals'
-      raw: val.toString()
+      raw: val
       str: val
 ,
   test: (val)-> true
@@ -168,6 +168,22 @@ EpicLog.deleteDead = ()->
 
 EpicLog.hr = (char = '=', count = 60)->
   hr = new Array(count).join char 
+
+
+
+
+# EpicLog.bind = (bind_args...)->
+#   log_fn = (log_args...)->
+#     EpicLog bind_args..., log_args... 
+#   log_fn.bind_args = bind_args
+
+#   log_fn.getSection = ()-> 
+#     log_fn.bind_args[0]
+#   log_fn.getSection = ()-> 
+#     log_fn.bind_args[0]
+
+#   return log_fn
+
 
 class Scope 
   ns: []
