@@ -229,7 +229,9 @@ describe 'spec', ()->
 
     elog 'anotate', elog.anotate "port : 8080" 
     elog 'anotate', 'port :', elog.anotate("8080", color: 'blue'), 'with blue'
-    elog 'anotate', 'port :', elog.cyan("8080"), 'with blue'
+    elog 'anotate', 'port :', elog.cyan(8080), 'with blue'
+    elog 'anotate', 'has sth :', elog.green( true), 'with green'
+
     process.nextTick ()->
       done()
 
