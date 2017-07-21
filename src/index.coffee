@@ -51,6 +51,14 @@ CUT_LV = 5
 
 
 ANOTATERS = [
+  test: (val)-> val instanceof AnotatedStr
+  anotate: (val)->
+    return item =
+      type: 'anotated'
+      raw: val
+      str: val.toString() 
+      anotate_str: val.toAnotatedDesc()
+,
   test: (val)-> val instanceof Scope
   anotate: (val)->
     return item =
@@ -183,6 +191,24 @@ class Scope
   log: (section, args...)->
     EpicLog section, this, args...
 
+class AnotatedStr 
+  constructor: (@value, @anotate)-> 
+  toString: ()-> @value
+  toAnotatedDesc: ()->
+    desc = []
+    for own key, value of @anotate
+      desc.push value
+    desc.join ','
+
+EpicLog.anotate = (word, anotate = {})->
+  new AnotatedStr word, anotate
+
+
+clrs = 'red,green,yellow,blue,magenta,cyan,redBright,greenBright,yellowBright,blueBright,magentaBright,cyanBright'.split ','
+clrs.map (clr)->
+  EpicLog[clr] = (word)->
+    new AnotatedStr word, {color: clr}
+
 
 EpicLog.scope = (name)->
   new Scope name
@@ -220,13 +246,17 @@ createFileWriter = (conf = {})->
       line.push "[#{dt}]"
 
       # file name is Section, so not print section
-      for anote in log_args
+      for log_item in log_args
         attach_inx = attach.length 
-        if anote.ref_data?
+        if log_item.type is 'anotated'
+          str = log_item.str 
+          anotate_str = log_item.anotate_str
+          line.push "[#{str}](#{anotate_str})"
+        else if log_item.ref_data?
           line.push   "$#{attach_inx}" 
-          attach.push "$#{attach_inx} := " + anote.ref_data
+          attach.push "$#{attach_inx} := " + log_item.ref_data
         else 
-          line.push anote.str 
+          line.push log_item.str 
 
       text = line.join ' '
       
@@ -334,21 +364,26 @@ createConsoleWriter = (conf = {})->
     attach = [] 
     line.push "[#{dt}]"
     line.push colored(section) 
-    for anote in log_args
+    for log_item in log_args
       attach_inx = attach.length
-      if anote.type is 'scope'
-        toks = anote.str[1...-1].split ':'
+      if log_item.type is 'anotated'
+        str = chalk.bold log_item.str
+        if log_item.raw.anotate?.color?
+          str = chalk[log_item.raw.anotate.color] str
+        line.push str
+      else if log_item.type is 'scope'
+        toks = log_item.str[1...-1].split ':'
         toks = toks.map (tok)-> colored tok 
         line.push '[' + toks.join(':') + ']' 
 
-      else if anote.type is 'error'
+      else if log_item.type is 'error'
         line.push   "$#{attach_inx}" 
-        attach.push "$#{attach_inx} := " + chalk.bold.red anote.ref_data
-      else if anote.type is 'function' 
+        attach.push "$#{attach_inx} := " + chalk.bold.red log_item.ref_data
+      else if log_item.type is 'function' 
         line.push   "$#{attach_inx}" 
-        attach.push "$#{attach_inx} := " + chalk.bold.green anote.ref_data
+        attach.push "$#{attach_inx} := " + chalk.bold.green log_item.ref_data
       else 
-        line.push anote.str
+        line.push log_item.str
  
     text = line.join ' '
     console.log text

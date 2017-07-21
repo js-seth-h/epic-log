@@ -210,3 +210,26 @@ describe 'spec', ()->
     process.nextTick ()->
       done()
 
+
+  it 'anotate', (done)->    
+    elog.configure
+      sections : [ 
+          name: 'anotate'
+          level: 5
+          enable: on
+          log_life: 1 
+      ]
+      writer: 
+        console : true 
+        file: 
+          dir: './log'
+          postfix: ".txt"
+ 
+    scope = elog.scope 'test'
+
+    elog 'anotate', elog.anotate "port : 8080" 
+    elog 'anotate', 'port :', elog.anotate("8080", color: 'blue'), 'with blue'
+    elog 'anotate', 'port :', elog.cyan("8080"), 'with blue'
+    process.nextTick ()->
+      done()
+
