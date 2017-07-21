@@ -189,22 +189,19 @@ class Scope
   ns: []
   constructor: (args...) ->
     @ns = args
+    @_str = @ns.join(':')
   sub: (sub_str = undefined)-> 
     sub_str = @_randomCode(4) unless sub_str
-    return new Scope @ns..., sub_str
-
+    return new Scope @ns..., sub_str 
   toString: ()->
-    str = @ns.join(':')
-    return "[#{str}]"
-  
+    return "[#{@_str}]" 
   _randomCode: (size)->
     CODE_SPACE = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890'
     result = ''
     for inx in [0...size]
       at = Math.floor CODE_SPACE.length * Math.random()
       result += CODE_SPACE[at]
-    return result
-
+    return result 
   log: (section, args...)->
     EpicLog section, this, args...
 
