@@ -165,8 +165,8 @@ EpicLog.deleteDead = ()->
     debug 'emit desc', section.name, mmt_dead
     emitter.emit 'dead', section.name, mmt_dead
 
- 
-
+EpicLog.hr = (char = '=', count = 25)->
+  hr = new Array(count).join char 
 
 class Scope 
   ns: []
@@ -191,6 +191,9 @@ class Scope
   log: (section, args...)->
     EpicLog section, this, args...
 
+EpicLog.scope = (name)->
+  new Scope name
+
 class AnotatedStr 
   constructor: (@value, @anotate)-> 
   toString: ()-> @value
@@ -208,13 +211,11 @@ clrs = 'red,green,yellow,blue,magenta,cyan,redBright,greenBright,yellowBright,bl
 clrs.map (clr)->
   EpicLog[clr] = (word)->
     new AnotatedStr word, {color: clr}
+ 
 
-
-EpicLog.scope = (name)->
-  new Scope name
-
-EpicLog.hr = (char = '=', count = 25)->
-  hr = new Array(count).join char
+EpicLog.bindSection = (section_name)->
+  return (log_args...)->
+    EpicLog section_name, log_args... 
 
 #####################################################################
 # writer 코드
