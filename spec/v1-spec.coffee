@@ -26,19 +26,13 @@ describe 'spec', ()->
 
 
 
-  it 'error ', (done)->    
+  it 'for types ', (done)->    
     elog.configure
       sections : [
-          name: 'ALPHA'
+          name: 'TYPES'
           level: 5
           enable: on
-          log_life: 7
-        , 
-          name: 'RELEASE'
-          level: 5
-          enable: on
-          log_life: 7 # days 
-          # post_task:
+          log_life: 7 
       ]
       writer: 
         console : true
@@ -48,10 +42,11 @@ describe 'spec', ()->
           # filepath: "./log/{{YYYYMMDD}}-{{SECTION}}.txt" 
 
     f = (x)-> console.log x
-    elog 'ALPHA', 'print date', new Date
-    elog 'ALPHA', f
-    elog 'ALPHA', new Error 'JUST'
-    elog 'BETA', 'this is beta', 'ver', 1
+    elog 'TYPES', '--------------------------------'
+    elog 'TYPES', 'print date', new Date
+    elog 'TYPES', f
+    elog 'TYPES', new Error 'JUST'
+    elog 'TYPES', 'this is beta', 'ver', 1
     done()
 
 
@@ -143,7 +138,7 @@ describe 'spec', ()->
   it 'scope ', (done)->    
     elog.configure
       sections : [ 
-          name: 'LV5-scope'
+          name: 'scope'
           level: 5
           enable: on
           log_life: 1 
@@ -156,7 +151,7 @@ describe 'spec', ()->
  
     scope = elog.scope 'test'
     scope = scope.sub().sub('call')
-    elog 'LV5-scope', scope, "print" 
+    elog 'scope', scope, "print" 
     process.nextTick ()->
       done()
 
@@ -166,7 +161,7 @@ describe 'spec', ()->
   it 'scope printed ', (done)->    
     elog.configure
       sections : [ 
-          name: 'LV5-scope'
+          name: 'scope.log'
           level: 5
           enable: on
           log_life: 1 
@@ -178,10 +173,14 @@ describe 'spec', ()->
           postfix: ".txt"
  
     scope = elog.scope 'test'
-    scope = scope.sub().sub('call')
+    scope2 = scope.sub().sub('call')
+    scope3 = scope.sub().sub('call')
     # elog 'LV5-scope', scope, "print" 
-    scope.log 'LV5-scope', 'is scope printed?'
-    scope.sub().log 'LV5-scope', 'really?'
+    elog 'scope.log', 'no scope'
+    scope.log 'scope.log', 'root scope'
+    scope2.log 'scope.log', 'is scope printed?'
+    scope2.sub().log 'scope.log', 'really?'
+    scope3.sub().log 'scope.log', 'color ok?'
     process.nextTick ()->
       done()
 

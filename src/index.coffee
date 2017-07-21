@@ -7,6 +7,8 @@ ficent = require 'ficent'
 glob = require 'glob'
 path = require 'path'
 
+chalk = require 'chalk'
+
 _isNumeric = (obj)->
     return !_isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
 _isString = (obj)->
@@ -46,13 +48,77 @@ lv 0 :
 conf = {}
 section_map = {}
 CUT_LV = 5
+
+
+ANOTATERS = [
+  test: (val)-> val instanceof Scope
+  anotate: (val)->
+    return item =
+      type: 'scope'
+      raw: val
+      str: val.toString() 
+,
+  test: (val)-> _isDate val
+  anotate: (val)->
+    return item =
+      type: 'date'
+      raw: val
+      str: val.toISOString()
+,
+  test: (val)-> _isString val
+  anotate: (val)->
+    return item =
+      type: 'string'
+      raw: val
+      str: val.toString()
+,
+  test: (val)-> _isError val 
+  anotate: (val, inx)-> 
+    return item =
+      type: 'error'
+      raw: val
+      str: val.toString()
+      ref_data: val.stack 
+,
+  test: (val)-> _isFunction val 
+  anotate: (val, inx)-> 
+    return item =
+      type: 'function'
+      raw: val
+      str: '[function]'
+      ref_data: val.toString(2) 
+,
+  # LITERALs 
+  test: (val)-> not ('object' is typeof val ) and not ('function' is typeof val )
+  anotate: (val)-> 
+    return item =
+      type: 'literals'
+      raw: val.toString()
+      str: val
+,
+  test: (val)-> true
+  anotate: (val, inx)->   
+    return item =
+      type: 'ref'
+      raw: val
+      str: "[ref_data]"
+      ref_data: util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
+]
+
 EpicLog = (section, args... )->  
   now = moment() 
   return unless section_map[section]
   sec = section_map[section]
   return if sec.level < CUT_LV
   return if not sec.enable is on
-  emitter.emit 'write', section, now, args
+
+
+  log_args =  args.map (val)-> 
+    for fmt, inx in ANOTATERS
+      if fmt.test val
+        return fmt.anotate val, inx 
+
+  emitter.emit 'write', section, now, log_args
 
 
 EpicLog.setLogLv = (new_lv)->
@@ -127,10 +193,8 @@ EpicLog.hr = (char = '=', count = 25)->
 #####################################################################
 # writer 코드
  
-createFileWriter = (conf = {})->
-
-  # debug = require('debug') 'createFileWriter'
-
+createFileWriter = (conf = {})-> 
+  # debug = require('debug') 'createFileWriter' 
   section_writers = {}
 
   createSectionWriter = (section)->
@@ -154,24 +218,16 @@ createFileWriter = (conf = {})->
       line = []
       attach = [] 
       line.push "[#{dt}]"
-      # line.push section 
-      for val in log_args
-        if not ('object' is typeof val ) and not ('function' is typeof val )
-          line.push val 
-        else if _isDate val
-          line.push val.toISOString()
-        else
-          attach_inx = attach.length
-          line.push "$#{attach_inx}" 
-          if _isError val 
-            attach_data = val.stack
-            attach_data = attach_data
-          else if _isFunction val 
-            attach_data = val.toString(2) 
-            attach_data = attach_data
-          else
-            attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor 
-          attach.push "$#{attach_inx} := " + attach_data 
+
+      # file name is Section, so not print section
+      for anote in log_args
+        attach_inx = attach.length 
+        if anote.ref_data?
+          line.push   "$#{attach_inx}" 
+          attach.push "$#{attach_inx} := " + anote.ref_data
+        else 
+          line.push anote.str 
+
       text = line.join ' '
       
       fmt_txt = text + "\n" 
@@ -259,10 +315,7 @@ createFileWriter = (conf = {})->
  
 
 
-createConsoleWriter = (conf = {})-> 
-  chalk = require('chalk');  
-
-
+createConsoleWriter = (conf = {})->  
   color_candidates = "red,green,yellow,blue,magenta,cyan,redBright,greenBright,yellowBright,blueBright,magentaBright,cyanBright".split ','
   next_candidate = 0
   keyword_color_table = {}
@@ -281,33 +334,27 @@ createConsoleWriter = (conf = {})->
     attach = [] 
     line.push "[#{dt}]"
     line.push colored(section) 
-    for val in log_args
-      if not ('object' is typeof val ) and not ('function' is typeof val )
-        line.push val 
-      else if _isDate val
-        line.push val.toISOString()
-      else if _isString val
-        line.push val.toString()
-      else if val instanceof Scope
-        line.push val.toString()
-      else
-        attach_inx = attach.length
-        line.push "$#{attach_inx}" 
-        if _isError val 
-          attach_data = val.stack
-          attach_data = chalk.bold.red attach_data
-        else if _isFunction val 
-          attach_data = val.toString(2) 
-          attach_data = chalk.green attach_data
-        else
-          attach_data = util.inspect val, showHidden: false, depth: 10 #, colors: opt.inspectColor
-        attach.push "$#{attach_inx}:= " + attach_data 
+    for anote in log_args
+      attach_inx = attach.length
+      if anote.type is 'scope'
+        toks = anote.str[1...-1].split ':'
+        toks = toks.map (tok)-> colored tok 
+        line.push '[' + toks.join(':') + ']' 
 
+      else if anote.type is 'error'
+        line.push   "$#{attach_inx}" 
+        attach.push "$#{attach_inx} := " + chalk.bold.red anote.ref_data
+      else if anote.type is 'function' 
+        line.push   "$#{attach_inx}" 
+        attach.push "$#{attach_inx} := " + chalk.bold.green anote.ref_data
+      else 
+        line.push anote.str
+ 
     text = line.join ' '
     console.log text
     for appendix in attach
       console.log appendix
- 
+    # debug 'keyword_color_table', keyword_color_table
   return obj =
     _write : _writer
     _dead: ()->
