@@ -165,7 +165,7 @@ EpicLog.deleteDead = ()->
     debug 'emit desc', section.name, mmt_dead
     emitter.emit 'dead', section.name, mmt_dead
 
-EpicLog.hr = (char = '=', count = 25)->
+EpicLog.hr = (char = '=', count = 60)->
   hr = new Array(count).join char 
 
 class Scope 
