@@ -102,7 +102,7 @@ ANOTATERS = [
     return item =
       type: 'literals'
       raw: val
-      str: val
+      str: String val
 ,
   test: (val)-> true
   anotate: (val, inx)->   
@@ -396,7 +396,10 @@ createConsoleWriter = (conf = {})->
         attach.push "$#{attach_inx} := " + chalk.bold.red log_item.ref_data
       else if log_item.type is 'function' 
         line.push   "$#{attach_inx}" 
-        attach.push "$#{attach_inx} := " + chalk.bold.green log_item.ref_data
+        attach.push "$#{attach_inx} := " + chalk.bold.green log_item.ref_data      
+      else if log_item.ref_data?
+        line.push   "$#{attach_inx}" 
+        attach.push "$#{attach_inx} := " + log_item.ref_data
       else 
         line.push log_item.str
  

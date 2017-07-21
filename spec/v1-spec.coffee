@@ -42,12 +42,11 @@ describe 'spec', ()->
           postfix: ".txt"
           # filepath: "./log/{{YYYYMMDD}}-{{SECTION}}.txt" 
 
-    f = (x)-> console.log x
+    fn = (x)-> console.log x
     elog 'TYPES', '--------------------------------'
     elog 'TYPES', 'print date', new Date
-    elog 'TYPES', f
-    elog 'TYPES', 'null', null
-    elog 'TYPES', 'undefined', undefined
+    elog 'TYPES', fn   
+    elog 'TYPES', 'empty obj,', {}, 'null', null,'undefined', undefined
     elog 'TYPES', new Error 'JUST'
     elog 'TYPES', 'this is beta', 'ver', 1
     done()
