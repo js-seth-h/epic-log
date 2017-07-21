@@ -139,6 +139,7 @@ describe 'spec', ()->
 
   it 'scope ', (done)->    
     elog.configure
+      random_size: 8
       sections : [ 
           name: 'scope'
           level: 5
@@ -151,9 +152,11 @@ describe 'spec', ()->
           dir: './log'
           postfix: ".txt"
  
+    rnd_scope = elog.scope()
     scope = elog.scope 'test'
     scope = scope.sub().sub('call')
     elog 'scope', scope, "print" 
+    elog 'scope', rnd_scope, 'random?'
     process.nextTick ()->
       done()
 

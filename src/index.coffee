@@ -45,7 +45,8 @@ lv 중요도
 lv 10 : 무조건 찍어야 하는 로그
 lv 0 : 
 ###
-conf = {}
+conf = 
+  random_size : 4
 section_map = {}
 CUT_LV = 5
 
@@ -136,7 +137,8 @@ EpicLog.setLogLv = (new_lv)->
 EpicLog.configure = (new_conf)-> 
   # Clear 
   emitter.removeAllListeners() 
-  conf = new_conf
+  conf = new_conf 
+  conf.random_size = 4 unless conf.random_size
   EpicLog.Writers = {} 
 
   for sec in conf.sections
@@ -184,6 +186,13 @@ EpicLog.hr = (char = '=', count = 60)->
 
 #   return log_fn
 
+EpicLog.randomScopeName = (size = conf.random_size)->
+  CODE_SPACE = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890'
+  result = ''
+  for inx in [0...size]
+    at = Math.floor CODE_SPACE.length * Math.random()
+    result += CODE_SPACE[at]
+  return result 
 
 class Scope 
   ns: []
@@ -191,21 +200,15 @@ class Scope
     @ns = args
     @_str = @ns.join(':')
   sub: (sub_str = undefined)-> 
-    sub_str = @_randomCode(4) unless sub_str
+    sub_str = EpicLog.randomScopeName() unless sub_str
     return new Scope @ns..., sub_str 
   toString: ()->
     return "[#{@_str}]" 
-  _randomCode: (size)->
-    CODE_SPACE = 'ABCDEFGHJKMNPQRSTVWXYZ1234567890'
-    result = ''
-    for inx in [0...size]
-      at = Math.floor CODE_SPACE.length * Math.random()
-      result += CODE_SPACE[at]
-    return result 
   log: (section, args...)->
     EpicLog section, this, args...
 
 EpicLog.scope = (name)->
+  name = EpicLog.randomScopeName() unless name
   new Scope name
 
 class AnotatedStr 
