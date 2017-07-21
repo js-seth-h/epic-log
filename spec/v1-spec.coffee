@@ -160,3 +160,27 @@ describe 'spec', ()->
     process.nextTick ()->
       done()
 
+
+
+
+  it 'scope printed ', (done)->    
+    elog.configure
+      sections : [ 
+          name: 'LV5-scope'
+          level: 5
+          enable: on
+          log_life: 1 
+      ]
+      writer: 
+        console : true 
+        file: 
+          dir: './log'
+          postfix: ".txt"
+ 
+    scope = elog.scope 'test'
+    scope = scope.sub().sub('call')
+    # elog 'LV5-scope', scope, "print" 
+    scope.log 'LV5-scope', 'is scope printed?'
+    scope.sub().log 'LV5-scope', 'really?'
+    process.nextTick ()->
+      done()

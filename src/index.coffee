@@ -114,6 +114,9 @@ class Scope
       result += CODE_SPACE[at]
     return result
 
+  log: (section, args...)->
+    EpicLog section, this, args...
+
 
 EpicLog.scope = (name)->
   new Scope name
