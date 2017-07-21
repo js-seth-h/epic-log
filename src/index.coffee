@@ -121,6 +121,9 @@ class Scope
 EpicLog.scope = (name)->
   new Scope name
 
+EpicLog.hr = (char = '=', count = 25)->
+  hr = new Array(count).join char
+
 #####################################################################
 # writer 코드
  

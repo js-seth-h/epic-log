@@ -184,3 +184,30 @@ describe 'spec', ()->
     scope.sub().log 'LV5-scope', 'really?'
     process.nextTick ()->
       done()
+
+
+  it 'hr', (done)->    
+    elog.configure
+      sections : [ 
+          name: 'HR'
+          level: 5
+          enable: on
+          log_life: 1 
+      ]
+      writer: 
+        console : true 
+        file: 
+          dir: './log'
+          postfix: ".txt"
+ 
+    scope = elog.scope 'test'
+
+    elog 'HR', elog.hr()
+    elog 'HR', elog.hr '*'
+    elog 'HR', elog.hr '#', 80
+
+    scope.log 'HR', elog.hr()
+    scope.log 'HR', elog.hr '%', 10
+    process.nextTick ()->
+      done()
+
