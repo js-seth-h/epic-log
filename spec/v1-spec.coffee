@@ -152,7 +152,7 @@ describe 'spec', ()->
           dir: './log'
           postfix: ".txt"
  
-    rnd_scope = elog.scope()
+    rnd_scope = elog.scope().scope()
     scope = elog.scope 'test'
     scope = scope.sub().sub('call')
     elog 'scope', scope, "print" 

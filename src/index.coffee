@@ -199,6 +199,9 @@ class Scope
   constructor: (args...) ->
     @ns = args
     @_str = @ns.join(':')
+
+  scope: (args...)->
+    @sub args...
   sub: (sub_str = undefined)-> 
     sub_str = EpicLog.randomScopeName() unless sub_str
     return new Scope @ns..., sub_str 
