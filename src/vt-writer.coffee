@@ -30,10 +30,10 @@ createVTWriter = (conf = {})->
     # console.log 'clr=', clr
     return chalk.bold[clr] section
 
-  _formatSentence = (log_sentence_ml)->
+  _formatSentence = (log_stmt_ml)->
 
-    [tag, attr, childs...] = log_sentence_ml
-    if tag isnt 'log_sentence'
+    [tag, attr, childs...] = log_stmt_ml
+    if tag isnt 'log_stmt'
       throw new Error 'Wrong Json ML data'
   
     actor = null

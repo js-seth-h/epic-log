@@ -29,9 +29,9 @@ createFileWriter = (conf = {})->
 
 
 
-  _formatSentence = (log_sentence_ml)->
-    [tag, attr, childs...] = log_sentence_ml
-    if tag isnt 'log_sentence'
+  _formatSentence = (log_stmt_ml)->
+    [tag, attr, childs...] = log_stmt_ml
+    if tag isnt 'log_stmt'
       throw new Error 'Wrong Json ML data'
 
     actor = null
