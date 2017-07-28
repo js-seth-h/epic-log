@@ -56,7 +56,7 @@ createFileWriter = (conf = {})->
     line.push "[#{dt}]"
 
     if actor
-      [_x, strs] = actor 
+      [_x, strs...] = actor 
       line.push  '[' + strs.join(':') + ']' 
 
     for word in story   

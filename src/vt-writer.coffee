@@ -61,9 +61,9 @@ createVTWriter = (conf = {})->
 
     if actor
       # console.log 'actor', actor
-      [_x, strs] = actor
-      ns = strs.map (scope)-> colored scope
-      line.push '[' + ns.join(':') + ']' 
+      [_x, strs...] = actor 
+      strs = strs.map (scope)-> colored scope
+      line.push '[' + strs.join(':') + ']' 
  
     for word in story  
       # console.log 'word =', word
