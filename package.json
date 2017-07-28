@@ -1,7 +1,7 @@
 {
   "name": "epic-log",
-  "version": "1.1.9",
-  "description": "log system",
+  "version": "2.0.0",
+  "description": "log writer for multiple destinations , support JSON-ML of who-do-it",
   "main": "lib",
   "scripts": {
     "build": "coffee -c -b -o lib src  ",
@@ -31,10 +31,7 @@
   "homepage": "https://github.com/js-seth-h/epic-log",
   "dependencies": {
     "chalk": "^2.0.1",
-    "colors": "^1.1.2",
-    "debug": "^2.2.0",
-    "ficent": "^2.3.0",
-    "glob": "^7.1.2",
+    "colors": "^1.1.2",   
     "moment": "^2.18.1"
   },
   "devDependencies": {
