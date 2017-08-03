@@ -52,6 +52,9 @@ EpicLog.setWriter = (key, filter_fn, sub_writer)->
 EpicLog.getWriter = (key)->
   writers[key][1]
 
+EpicLog.getWriterIds = ()->
+  Object.keys writers
+
 EpicLog.getFilterConf = (key)->
   writers[key][0]
 
