@@ -54,7 +54,7 @@ createVTWriter = (conf = {})->
     line = []
 
     time = moment attr.when
-    dt = time.format("hh:mm:ss.SSSS")
+    dt = time.format("hh:mm:ss.SSS")
     line.push "[#{dt}]"
 
     line.push colored attr.pid 
