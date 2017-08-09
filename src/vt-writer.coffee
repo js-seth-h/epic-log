@@ -13,21 +13,11 @@ shuffleArray = (a) ->
     i--
   return a
 
-_isString = (obj)->
-  typeof obj == 'string' || obj instanceof String
+
 _isArray = Array.isArray or (obj) ->
   Object.prototype.toString.call(obj) is "[object Array]"
-# _isDate = (obj)->
-#   Object.prototype.toString.call(obj) is '[object Date]'
-_isFunction = (obj)->
-  Object.prototype.toString.call(obj) is '[object Function]'
-_isObject = (obj)->
-  return !!(typeof obj is 'object' and obj isnt null)
 _isPlainObject= (obj)->
   return obj != null and typeof obj == 'object' and Object.getPrototypeOf(obj) == Object.prototype
-
-_isError = (obj)->
-  return obj instanceof Error
 
 
 chalk = require 'chalk'
@@ -101,82 +91,11 @@ formatML.dump = (tag, attr, child_txts)->
   return str 
 
 
-createVTWriter = (conf = {})->
-  # next_candidate = 0
-  # keyword_color_table = {}
-  # colored = (section)->
-  #   unless keyword_color_table[section]
-  #     keyword_color_table[section] = color_candidates[next_candidate]
-  #     next_candidate++
-  #     next_candidate = 0 if next_candidate is color_candidates.length
-  #   clr = keyword_color_table[section]
-  #   # console.log 'clr=', clr
-  #   return chalk.bold[clr] section
+createVTWriter = (conf = {})-> 
 
   _formatSentence = (log_stmt_ml)->
     return formatML log_stmt_ml
-
-    # [tag, attr, childs...] = log_stmt_ml
-    # if tag isnt 'log_stmt'
-    #   throw new Error 'Wrong Json ML data'
-
-    # actor = null
-    # story = []
-    # dump = []
-    # for child in childs
-    #   if Array.isArray child
-    #     [el_type, oth...] = child
-    #     if el_type is 'subject'
-    #       actor = child
-    #     if el_type is 'text'
-    #       story.push child
-    #     if el_type is 'var'
-    #       dump.push child
-    #   else
-    #     story.push ['text', null, child]
-
-    # line = []
-
-    # time = moment attr.when
-    # dt = time.format("hh:mm:ss.SSS")
-    # line.push "[#{dt}]"
-
-    # line.push colored attr.pid
-
-    # if actor
-    #   # console.log 'actor', actor
-    #   [_x, strs...] = actor
-    #   strs = strs.map (scope)-> colored scope
-    #   line.push '[' + strs.join(':') + ']'
-
-    # for word in story
-    #   # console.log 'word =', word
-    #   [ _x, attr, str ] = word
-    #   if attr
-    #     str = chalk.bold str
-    #     if attr.color?
-    #       str = chalk[attr.color] str
-    #     if attr.keyword is true
-    #       str = colored str
-    #   line.push str
-
-
-    # text = line.join ' '
-
-    # lines = []
-    # lines.addLine = (args...)-> lines.push args
-    # lines.addLine text
-
-    # for dump_item in dump
-    #   [_x, attrs, value] = dump_item
-    #   # console.log 'dump_item', dump_item
-    #   if attrs.type is 'error'
-    #     value = chalk.bold.red value
-
-    #   lines.addLine "#{chalk.bold.cyan attrs.name} =>", value
-
-    # return lines
-
+ 
   return _writer = (log_args...)->
     if Array.isArray log_args[0]
       lines = _formatSentence log_args[0]

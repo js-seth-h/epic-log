@@ -23,15 +23,9 @@ EpicLog = (log_args...)->
     [tag, attrs, els...] = json_ml
   for own k, [filter_fn, _write_fn] of writers 
     if attrs and filter_fn
-      continue if true isnt filter_fn attrs
-    # if Array.isArray log_args[0]
-    #   json_ml = log_args[0]
-    #   if filter_fn and EpicLog._filter_fn
-    #     continue if true isnt EpicLog._filter_fn json_ml, filter_fn
+      continue if true isnt filter_fn attrs 
     _write_fn log_args...
-
-EpicLog.conf = {}
-
+ 
 writer_factory = {}
 EpicLog.addWriterFactory = (key, factory_fn)->
   writer_factory[key] = factory_fn
@@ -57,10 +51,7 @@ EpicLog.getWriterKeys = ()->
 
 EpicLog.getFilterConf = (key)->
   writers[key][0]
-
-# EpicLog.setFilterFn = (fn)->
-#   EpicLog._filter_fn = fn
- 
+  
 
 EpicLog.addWriterFactory 'vt', require './vt-writer'
 EpicLog.addWriterFactory 'file', require './file-writer'

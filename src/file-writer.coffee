@@ -4,21 +4,10 @@ util = require 'util'
 moment = require 'moment'
 
 
-_isString = (obj)->
-  typeof obj == 'string' || obj instanceof String
 _isArray = Array.isArray or (obj) ->
   Object.prototype.toString.call(obj) is "[object Array]"
-# _isDate = (obj)->
-#   Object.prototype.toString.call(obj) is '[object Date]'
-_isFunction = (obj)->
-  Object.prototype.toString.call(obj) is '[object Function]'
-_isObject = (obj)->
-  return !!(typeof obj is 'object' and obj isnt null)
 _isPlainObject= (obj)->
   return obj != null and typeof obj == 'object' and Object.getPrototypeOf(obj) == Object.prototype
-
-_isError = (obj)->
-  return obj instanceof Error
 
 
 formatML = (ml)->
@@ -52,7 +41,7 @@ formatML.text = (tag, attr, child_txts)->
 
 formatML.who = (tag, attr, child_txts)->
   return '[' + child_txts.join(':') + ']'
-  
+
 formatML.log_stmt = (tag, attr, child_txts)->
   time = moment attr.when
   dt = time.format("hh:mm:ss.SSSS")
@@ -69,23 +58,14 @@ formatML.dump = (tag, attr, child_txts)->
   return str
 
 
-
 createFileWriter = (conf = {})->
   truncated = false
   lock = false
   bufLogs = []
 
-  _getFilepath = (file_ymd)->
-    path.join conf.dir, "#{file_ymd}" + conf.postfix
-    # name = conf.filepath
-    # name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd)
-    # name = name.replace(/\{\{SECTION\}\}/g, section)
-    # return name
-  # _getFilePattern = ()->
-  #   path.join conf.dir, "*-#{section}" + conf.postfix
-    # name = conf.filepath
-    # name = name.replace(/\{\{.+?\}\}/g, '*')
-    # return name
+
+  _formatSentence = (log_stmt_ml)->
+    return formatML log_stmt_ml 
 
   _formatLog = (log_args...)->
     if Array.isArray log_args[0]
@@ -95,56 +75,9 @@ createFileWriter = (conf = {})->
     return strs.join(' ') + '\n'
 
 
-
-  _formatSentence = (log_stmt_ml)->
-    return formatML log_stmt_ml
-
-    # [tag, attr, childs...] = log_stmt_ml
-    # if tag isnt 'log_stmt'
-    #   throw new Error 'Wrong Json ML data'
-
-    # actor = null
-    # story = []
-    # dump = []
-    # for child in childs
-    #   if Array.isArray child
-    #     [el_type, oth...] = child
-    #     if el_type is 'subject'
-    #       actor = child
-    #     if el_type is 'text'
-    #       story.push child
-    #     if el_type is 'var'
-    #       dump.push child
-    #   else
-    #     story.push ['text', null, child]
-
-    # line = []
-
-    # time = moment attr.when
-    # dt = time.format("hh:mm:ss.SSSS")
-    # line.push "[#{dt}]"
-
-    # if actor
-    #   [_x, strs...] = actor
-    #   line.push  '[' + strs.join(':') + ']'
-
-    # for word in story
-    #   [_x, attrs, str ] = word
-    #   if attrs
-    #     anotate_str = JSON.stringify attrs
-    #     line.push "[#{str}](#{anotate_str})"
-    #   else
-    #     line.push str
-
-    # text = line.join ' '
-
-    # fmt_txt = text + "\n"
-
-    # for dump_item in dump
-    #   [_x, attrs, value] = dump_item
-    #   fmt_txt +=  "  #{attrs.name} => #{value}\n"
-
-    # return fmt_txt
+  _getFilepath = (file_ymd)->
+    path.join conf.dir, "#{file_ymd}" + conf.postfix 
+     
 
   _appendToFile = ()->
     return if lock
