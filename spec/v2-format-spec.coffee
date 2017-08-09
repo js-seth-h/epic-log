@@ -23,6 +23,8 @@ describe 'spec', ()->
       { pid: 11824, when: '2017-08-09T08:44:02.078Z', lv: 9 },
       [ 'who', 'my-name', 'x' ],
       'type',
+      'for', 
+      [ 'who', 'your-name', 'Y' ],
       'a text', 
       'that',
       [ 'text', { color: 'red' }, 'emphasized', 'red' ]
