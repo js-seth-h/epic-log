@@ -3,21 +3,86 @@ fs = require 'fs'
 util = require 'util'
 moment = require 'moment'
 
-createFileWriter = (conf = {})->  
-  truncated = false  
-  lock = false 
+
+_isString = (obj)->
+  typeof obj == 'string' || obj instanceof String
+_isArray = Array.isArray or (obj) ->
+  Object.prototype.toString.call(obj) is "[object Array]"
+# _isDate = (obj)->
+#   Object.prototype.toString.call(obj) is '[object Date]'
+_isFunction = (obj)->
+  Object.prototype.toString.call(obj) is '[object Function]'
+_isObject = (obj)->
+  return !!(typeof obj is 'object' and obj isnt null)
+_isPlainObject= (obj)->
+  return obj != null and typeof obj == 'object' and Object.getPrototypeOf(obj) == Object.prototype
+
+_isError = (obj)->
+  return obj instanceof Error
+
+
+_byTag = (tag, attr, child_txts)->
+  if tag is 'log_stmt'
+    time = moment attr.when
+    dt = time.format("hh:mm:ss.SSSS")
+    words = []
+    words.push "[#{dt}]"
+
+    words.push "PID=", attr.pid
+    words.push child_txts...
+    return words.join(' ') + '\n'
+
+  if tag is 'who'
+    return '[' + child_txts.join(':') + ']'
+
+  if tag is 'text'
+    str = child_txts.join ' '
+    if attr
+      str = "[#{str}](#{JSON.stringify attr })"
+    return str
+  if tag is 'dump'
+    str = '\n'
+    str += attr.name + ' => '
+    str += child_txts.join '\n'
+    return str
+
+  return child_txts.join ' '
+
+formatML = (ml)->
+  _str = (ml_node)->
+    # txts = []
+    tag = ml_node[0]
+    attr = null
+    child_start_inx = 1
+    if _isPlainObject ml_node[child_start_inx]
+      attr = ml_node[1]
+      child_start_inx++
+    child_txts = ml_node[child_start_inx...].map (child)->
+      return _str(child) if _isArray child
+      return child
+
+    _byTag tag, attr, child_txts
+    # txts.join ' '
+  _str ml
+
+
+
+
+createFileWriter = (conf = {})->
+  truncated = false
+  lock = false
   bufLogs = []
 
-  _getFilepath = (file_ymd)->  
+  _getFilepath = (file_ymd)->
     path.join conf.dir, "#{file_ymd}" + conf.postfix
     # name = conf.filepath
-    # name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd) 
-    # name = name.replace(/\{\{SECTION\}\}/g, section) 
+    # name = name.replace(/\{\{YYYYMMDD\}\}/g, file_ymd)
+    # name = name.replace(/\{\{SECTION\}\}/g, section)
     # return name
-  # _getFilePattern = ()->  
+  # _getFilePattern = ()->
   #   path.join conf.dir, "*-#{section}" + conf.postfix
     # name = conf.filepath
-    # name = name.replace(/\{\{.+?\}\}/g, '*')  
+    # name = name.replace(/\{\{.+?\}\}/g, '*')
     # return name
 
   _formatLog = (log_args...)->
@@ -30,61 +95,63 @@ createFileWriter = (conf = {})->
 
 
   _formatSentence = (log_stmt_ml)->
-    [tag, attr, childs...] = log_stmt_ml
-    if tag isnt 'log_stmt'
-      throw new Error 'Wrong Json ML data'
+    return formatML log_stmt_ml
 
-    actor = null
-    story = []
-    dump = []
-    for child in childs      
-      if Array.isArray child
-        [el_type, oth...] = child
-        if el_type is 'subject'
-          actor = child
-        if el_type is 'text'
-          story.push child
-        if el_type is 'var'
-          dump.push child
-      else 
-        story.push ['text', null, child] 
+    # [tag, attr, childs...] = log_stmt_ml
+    # if tag isnt 'log_stmt'
+    #   throw new Error 'Wrong Json ML data'
 
-    line = [] 
+    # actor = null
+    # story = []
+    # dump = []
+    # for child in childs
+    #   if Array.isArray child
+    #     [el_type, oth...] = child
+    #     if el_type is 'subject'
+    #       actor = child
+    #     if el_type is 'text'
+    #       story.push child
+    #     if el_type is 'var'
+    #       dump.push child
+    #   else
+    #     story.push ['text', null, child]
 
-    time = moment attr.when 
-    dt = time.format("hh:mm:ss.SSSS")
-    line.push "[#{dt}]"
+    # line = []
 
-    if actor
-      [_x, strs...] = actor 
-      line.push  '[' + strs.join(':') + ']' 
+    # time = moment attr.when
+    # dt = time.format("hh:mm:ss.SSSS")
+    # line.push "[#{dt}]"
 
-    for word in story   
-      [_x, attrs, str ] = word
-      if attrs
-        anotate_str = JSON.stringify attrs
-        line.push "[#{str}](#{anotate_str})"  
-      else 
-        line.push str
+    # if actor
+    #   [_x, strs...] = actor
+    #   line.push  '[' + strs.join(':') + ']'
 
-    text = line.join ' '
-    
-    fmt_txt = text + "\n" 
+    # for word in story
+    #   [_x, attrs, str ] = word
+    #   if attrs
+    #     anotate_str = JSON.stringify attrs
+    #     line.push "[#{str}](#{anotate_str})"
+    #   else
+    #     line.push str
 
-    for dump_item in dump
-      [_x, attrs, value] = dump_item
-      fmt_txt +=  "  #{attrs.name} => #{value}\n"
-    
-    return fmt_txt
+    # text = line.join ' '
+
+    # fmt_txt = text + "\n"
+
+    # for dump_item in dump
+    #   [_x, attrs, value] = dump_item
+    #   fmt_txt +=  "  #{attrs.name} => #{value}\n"
+
+    # return fmt_txt
 
   _appendToFile = ()->
-    return if lock 
-    return if bufLogs.length is 0 
-    lock = true 
+    return if lock
+    return if bufLogs.length is 0
+    lock = true
     data_to_fs = ''
     file_ymd = null
-    loop 
-      break if bufLogs.length is 0 
+    loop
+      break if bufLogs.length is 0
       log_args = bufLogs[0]
 
       if Array.isArray log_args[0]
@@ -93,9 +160,9 @@ createFileWriter = (conf = {})->
         [el_type, attrs, els...] = log_args[0]
         time = moment attrs.when
         ymd = time.format("YYYYMMDD")
-      else 
+      else
         ymd = moment().format "YYYYMMDD"
- 
+
       if file_ymd isnt null and file_ymd isnt ymd
         break # 추출한 것까지 저장하고 다음 파일로감
       file_ymd = ymd
@@ -104,13 +171,14 @@ createFileWriter = (conf = {})->
       data_to_fs += _formatLog log_args...
 
     filepath = _getFilepath file_ymd
-    fs.appendFile filepath, data_to_fs, (err)-> 
+    fs.appendFile filepath, data_to_fs, (err)->
       lock = false
       _appendToFile()
- 
+
   return _writer = (log_args...)->
     bufLogs.push log_args
     _appendToFile()
 
- 
+
+createFileWriter.formatML = formatML
 module.exports = exports = createFileWriter
