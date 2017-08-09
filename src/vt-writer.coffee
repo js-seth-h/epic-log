@@ -68,7 +68,7 @@ formatML.log_stmt = (tag, attr, child_txts)->
   words.push "[#{dt}]" 
   words.push chalk.cyan attr.pid
   words.push child_txts...
-  return words.join(' ') + '\n'
+  return words.join(' ')
 
 formatML.who = (tag, attr, child_txts)->
   child_txts = child_txts.map (str)-> colored str
@@ -91,20 +91,15 @@ formatML.dump = (tag, attr, child_txts)->
   return str 
 
 
-createVTWriter = (conf = {})-> 
-
-  _formatSentence = (log_stmt_ml)->
-    return formatML log_stmt_ml
+createVTWriter = (conf = {})->  
  
   return _writer = (log_args...)->
     if Array.isArray log_args[0]
-      lines = _formatSentence log_args[0]
+      console.log formatML log_args[0]
     else
-      lines = [ log_args.map (x)-> x.toString() ]
-
-    for ln in lines
-      console.log ln...
-
+      words = log_args.map (x)-> x.toString()
+      console.log words.join ' '
+      
 
 createVTWriter.formatML = formatML
 module.exports = exports = createVTWriter

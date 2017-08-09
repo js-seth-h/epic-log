@@ -62,14 +62,11 @@ createFileWriter = (conf = {})->
   truncated = false
   lock = false
   bufLogs = []
-
-
-  _formatSentence = (log_stmt_ml)->
-    return formatML log_stmt_ml 
+ 
 
   _formatLog = (log_args...)->
     if Array.isArray log_args[0]
-      return _formatSentence log_args[0]
+      return formatML log_args[0]
 
     strs = log_args.map (x)-> x.toString()
     return strs.join(' ') + '\n'
