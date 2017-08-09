@@ -48,38 +48,6 @@ colored = (section)->
   # console.log 'clr=', clr
   return chalk.bold[clr] section
 
-_byTag = (tag, attr, child_txts)->
-  if tag is 'log_stmt'
-    time = moment attr.when
-    dt = time.format("hh:mm:ss.SSSS")
-    words = []
-    words.push "[#{dt}]"
-
-    words.push chalk.cyan attr.pid
-    words.push child_txts...
-    return words.join(' ') + '\n'
-
-  if tag is 'who'
-    child_txts = child_txts.map (str)-> colored str
-    return '[' + child_txts.join(':') + ']'
-
-  if tag is 'text'
-    str = child_txts.join ' '
-    if attr.color
-      str = chalk[attr.color] str
-      # str = "[#{str}](#{JSON.stringify attr })"
-    return str
-  if tag is 'dump'
-    str = '\n'
-    str += chalk.cyan(attr.name) + ' => '
-    body = child_txts.join '\n'
-    if attr.type is 'error'
-      body = chalk.red body
-    str += body
-    return str
-
-  return child_txts.join ' '
-
 
 formatML = (ml)->
   _str = (ml_node)->
@@ -97,6 +65,40 @@ formatML = (ml)->
     _byTag tag, attr, child_txts
   _str ml
 
+_byTag = (tag, attr, child_txts)->
+  if formatML[tag]
+    return formatML[tag] tag, attr, child_txts 
+  return child_txts.join ' '
+
+ 
+formatML.log_stmt = (tag, attr, child_txts)->
+  time = moment attr.when
+  dt = time.format("hh:mm:ss.SSSS")
+  words = []
+  words.push "[#{dt}]" 
+  words.push chalk.cyan attr.pid
+  words.push child_txts...
+  return words.join(' ') + '\n'
+
+formatML.who = (tag, attr, child_txts)->
+  child_txts = child_txts.map (str)-> colored str
+  return '[' + child_txts.join(':') + ']'
+
+formatML.text = (tag, attr, child_txts)->
+  str = child_txts.join ' '
+  if attr.color
+    str = chalk[attr.color] str
+    # str = "[#{str}](#{JSON.stringify attr })"
+  return str 
+  
+formatML.dump = (tag, attr, child_txts)->
+  str = '\n'
+  str += chalk.cyan(attr.name) + ' => '
+  body = child_txts.join '\n'
+  if attr.type is 'error'
+    body = chalk.red body
+  str += body
+  return str 
 
 
 createVTWriter = (conf = {})->

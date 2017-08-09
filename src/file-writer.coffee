@@ -21,33 +21,6 @@ _isError = (obj)->
   return obj instanceof Error
 
 
-_byTag = (tag, attr, child_txts)->
-  if tag is 'log_stmt'
-    time = moment attr.when
-    dt = time.format("hh:mm:ss.SSSS")
-    words = []
-    words.push "[#{dt}]"
-
-    words.push "PID=", attr.pid
-    words.push child_txts...
-    return words.join(' ') + '\n'
-
-  if tag is 'who'
-    return '[' + child_txts.join(':') + ']'
-
-  if tag is 'text'
-    str = child_txts.join ' '
-    if attr
-      str = "[#{str}](#{JSON.stringify attr })"
-    return str
-  if tag is 'dump'
-    str = '\n'
-    str += attr.name + ' => '
-    str += child_txts.join '\n'
-    return str
-
-  return child_txts.join ' '
-
 formatML = (ml)->
   _str = (ml_node)->
     # txts = []
@@ -65,6 +38,35 @@ formatML = (ml)->
     # txts.join ' '
   _str ml
 
+
+_byTag = (tag, attr, child_txts)->
+  if formatML[tag]
+    return formatML[tag] tag, attr, child_txts 
+  return child_txts.join ' '
+
+formatML.text = (tag, attr, child_txts)->
+  str = child_txts.join ' '
+  if attr
+    str = "[#{str}](#{JSON.stringify attr })"
+  return str
+
+formatML.who = (tag, attr, child_txts)->
+  return '[' + child_txts.join(':') + ']'
+  
+formatML.log_stmt = (tag, attr, child_txts)->
+  time = moment attr.when
+  dt = time.format("hh:mm:ss.SSSS")
+  words = []
+  words.push "[#{dt}]"
+
+  words.push "PID=", attr.pid
+  words.push child_txts...
+  return words.join(' ') + '\n'
+formatML.dump = (tag, attr, child_txts)->
+  str = '\n'
+  str += attr.name + ' => '
+  str += child_txts.join '\n'
+  return str
 
 
 
