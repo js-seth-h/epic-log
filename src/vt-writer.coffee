@@ -78,17 +78,15 @@ formatML.who = (tag, attr, child_txts)->
 
 
 formatML.id = (tag, attr, child_txts)->
-  h = child_txts[0][0]
-  str = child_txts[0][1...]
+  str = child_txts[0]
   toks = str.split(':').map (t)-> colored t
-  return h + toks.join ":"
+  return toks.join ":"
   # child_txts = child_txts.map (str)-> colored str
   # return child_txts.join(':')
 
 formatML.variable = (tag, attr, child_txts)->
-  h = child_txts[0][0]
-  str = child_txts[0][1...]
-  return h + colored str
+  str = child_txts[0]
+  return colored str
   # toks = str.split(':').map (t)-> colored t
   # return "@" + toks.join ":"
 

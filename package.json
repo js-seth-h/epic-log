@@ -1,6 +1,6 @@
 {
   "name": "epic-log",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "log writer for multiple destinations , support JSON-ML of who-do-it",
   "main": "lib",
   "scripts": {
