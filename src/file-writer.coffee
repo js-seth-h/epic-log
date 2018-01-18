@@ -30,7 +30,7 @@ formatML = (ml)->
 
 _byTag = (tag, attr, child_txts)->
   if formatML[tag]
-    return formatML[tag] tag, attr, child_txts 
+    return formatML[tag] tag, attr, child_txts
   return child_txts.join ' '
 
 formatML.text = (tag, attr, child_txts)->
@@ -42,6 +42,7 @@ formatML.text = (tag, attr, child_txts)->
 formatML.who = (tag, attr, child_txts)->
   return '[' + child_txts.join(':') + ']'
 
+formatML.testimony =
 formatML.log_stmt = (tag, attr, child_txts)->
   time = moment attr.when
   dt = time.format("hh:mm:ss.SSSS")
@@ -56,13 +57,13 @@ formatML.dump = (tag, attr, child_txts)->
   str += attr.name + ' => '
   str += child_txts.join '\n'
   return str
-
+ 
 
 createFileWriter = (conf = {})->
   truncated = false
   lock = false
   bufLogs = []
- 
+
 
   _formatLog = (log_args...)->
     if Array.isArray log_args[0]
@@ -73,8 +74,8 @@ createFileWriter = (conf = {})->
 
 
   _getFilepath = (file_ymd)->
-    path.join conf.dir, "#{file_ymd}" + conf.postfix 
-     
+    path.join conf.dir, "#{file_ymd}" + conf.postfix
+
 
   _appendToFile = ()->
     return if lock

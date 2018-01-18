@@ -38,7 +38,6 @@ colored = (section)->
   # console.log 'clr=', clr
   return chalk.bold[clr] section
 
-
 formatML = (ml)->
   _str = (ml_node)->
     # txts = []
@@ -52,7 +51,10 @@ formatML = (ml)->
       return _str(child) if _isArray child
       return child
 
-    _byTag tag, attr, child_txts
+    # _byTag tag, attr, child_txts
+    if formatML[tag]
+      return formatML[tag] tag, attr, child_txts
+    return child_txts.join ' '
   _str ml
 
 _byTag = (tag, attr, child_txts)->
@@ -111,7 +113,7 @@ createVTWriter = (conf = {})->
 
   return _writer = (log_args...)->
     if Array.isArray log_args[0]
-      console.log formatML log_args[0]
+      console.log formatML(log_args[0])
     else
       words = log_args.map (x)-> x.toString()
       console.log words.join ' '

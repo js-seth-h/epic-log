@@ -31,6 +31,6 @@
     "moment": "^2.18.1"
   },
   "devDependencies": {
-    "coffee-script": "^1.7.1"
+    "coffeescript": "^2.0.0"
   }
 }

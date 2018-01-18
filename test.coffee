@@ -4,46 +4,32 @@ elog = require './src'
 debug = require('debug') 'spec'
 
 
-file = require './src/file-writer'
-file_FormatML = file.formatML
-
-
-
-vt = require './src/vt-writer'
-vt_FormatML = vt.formatML
 
 
 err = new Error 'JUST'
 fn = (x)-> x * x
 
 plan = 'test'
-ml = ['testimony',
-  {
-    lv: 9,
-    about: 'BT'
-    debug_ns: 'test'
-    when: '2017-08-09T08:44:02.078Z'
-  },
-  'test', ['variable', {
-    ref: 1
-  }, '#a'],
-  ['variable', {
-    ref: 2
-  }, '#b'],
-  'tes2', ['variable', {
-    ref: 'test'
-  }, '#plan'],
-  'test', ['variable', {
-    ref: 'x'
-  }, '#x'],
-  ['variable', {
-    ref: 'yy'
-  }, '#y'],
-  'tes2', ['variable', {
-    ref: 'test'
-  }, '#plan'],
-  ['id', '@who-do-it:D8S2']
+ml = [ 'testimony',
+  { dump: true },
+  'test',
+  [ 'variable', { name: 'a', ref: 1 }, '#a' ],
+  [ 'variable', { name: 'b', ref: 2 }, '#b' ],
+  [ 'variable',
+    { name: 'dt', ref: null },
+    '#dt' ],
+  ['id', '@who-do-it']
   ['id', '@Writer']
+  [ 'variable', { name: 'fn', ref: null }, '#fn' ],
+  [ 'dump', { name: 'a', type: 'number' }, '1' ],
+  [ 'dump', { name: 'b', type: 'number' }, '2' ],
+  [ 'dump',
+    { name: 'dt', type: 'date' },
+    '2018-01-18T09:04:20.641Z' ],
+  [ 'dump',
+    { name: 'fn', type: 'function' },
+    'function (a) {\n        return alert(1);\n      }' ]
+  ['dump', {name: 'Error', type: 'error'}, err.stack.toString() ]
 ]
 
 ml_old = [ 'log_stmt',
@@ -66,6 +52,11 @@ ml_old = [ 'log_stmt',
 
 # str = file_FormatML ml
 
-console.log vt_FormatML ml_old
+file = require './src/file-writer'
+file_FormatML = file.formatML
+vt = require './src/vt-writer'
+vt_FormatML = vt.formatML
+
+console.log file_FormatML ml_old
 console.log '-------------------------------------------'
-console.log vt_FormatML ml
+console.log file_FormatML ml
