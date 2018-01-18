@@ -57,15 +57,15 @@ formatML = (ml)->
 
 _byTag = (tag, attr, child_txts)->
   if formatML[tag]
-    return formatML[tag] tag, attr, child_txts 
+    return formatML[tag] tag, attr, child_txts
   return child_txts.join ' '
 
- 
+formatML.testimony =
 formatML.log_stmt = (tag, attr, child_txts)->
   time = moment attr.when
   dt = time.format("hh:mm:ss.SSSS")
   words = []
-  words.push "[#{dt}]" 
+  words.push "[#{dt}]"
   words.push chalk.cyan attr.pid
   words.push child_txts...
   return words.join(' ')
@@ -74,13 +74,29 @@ formatML.who = (tag, attr, child_txts)->
   child_txts = child_txts.map (str)-> colored str
   return '[' + child_txts.join(':') + ']'
 
+
+formatML.id = (tag, attr, child_txts)->
+  h = child_txts[0][0]
+  str = child_txts[0][1...]
+  toks = str.split(':').map (t)-> colored t
+  return h + toks.join ":"
+  # child_txts = child_txts.map (str)-> colored str
+  # return child_txts.join(':')
+
+formatML.variable = (tag, attr, child_txts)->
+  h = child_txts[0][0]
+  str = child_txts[0][1...]
+  return h + colored str
+  # toks = str.split(':').map (t)-> colored t
+  # return "@" + toks.join ":"
+
 formatML.text = (tag, attr, child_txts)->
   str = child_txts.join ' '
   if attr.color
     str = chalk[attr.color] str
     # str = "[#{str}](#{JSON.stringify attr })"
-  return str 
-  
+  return str
+
 formatML.dump = (tag, attr, child_txts)->
   str = '\n'
   str += chalk.cyan(attr.name) + ' => '
@@ -88,18 +104,18 @@ formatML.dump = (tag, attr, child_txts)->
   if attr.type is 'error'
     body = chalk.red body
   str += body
-  return str 
+  return str
 
 
-createVTWriter = (conf = {})->  
- 
+createVTWriter = (conf = {})->
+
   return _writer = (log_args...)->
     if Array.isArray log_args[0]
       console.log formatML log_args[0]
     else
       words = log_args.map (x)-> x.toString()
       console.log words.join ' '
-      
+
 
 createVTWriter.formatML = formatML
 module.exports = exports = createVTWriter
