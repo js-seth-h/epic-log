@@ -2,12 +2,8 @@
   "name": "epic-log",
   "version": "3.0.1",
   "description": "log writer for multiple destinations , support JSON-ML of who-do-it",
-  "main": "lib",
+  "main": "src",
   "scripts": {
-    "build": "coffee -c -b -o lib src  ",
-    "clean": "rm -r lib",
-    "prepublish": "npm run-script build",
-    "postpublish": "npm run-script clean",
     "test": "jasmine-node --coffee  --verbose spec"
   },
   "repository": {
